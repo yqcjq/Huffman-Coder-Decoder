@@ -222,7 +222,7 @@ int calculateWPL(HuffmanNode *root, int depth)
   return calculateWPL(root->left, depth + 1) + calculateWPL(root->right, depth + 1);
 }
 
-// 将二进制字符串转换为十六进制字符串（压缩后，文件以二进制表示，可能会存在非8倍数位的问题，需要先补0）
+// 将二进制字符串转换为十六进制字符串
 void binaryToHex(const char *binary, char *hex) {
   int len = strlen(binary);
   int hexIndex = 0;
@@ -236,27 +236,40 @@ void binaryToHex(const char *binary, char *hex) {
   hex[hexIndex] = '\0';
 }
 
-// 对文本进行哈夫曼编码，输出压缩后的二进制、十六进制、哈希值
+// 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
 void encodeText(const char *filename, char huffmanCodes[256][100], char *content)
 {
 
   char binary[100000] = "";  // 假设编码后的二进制字符串长度不超过 100000
-  printf("压缩后后的二进制文本为: ");
+  printf("压缩后的二进制文本为: ");
   for (int i = 0; content[i] != '\0'; i++)
   {
     strcat(binary, huffmanCodes[(unsigned char)content[i]]);
-        printf("%s", huffmanCodes[(unsigned char)content[i]]);
+    printf("%s", huffmanCodes[(unsigned char)content[i]]);
   }
   printf("\n");
 
+ // 计算需要补零的位数
+ int binaryLength = strlen(binary);
+ int padding = 8 - (binaryLength % 8);
+ if (padding < 8) {
+     for (int i = 0; i < padding; i++) {
+         strcat(binary, "0");
+     }
+ }
+
+ printf("补零后的二进制文本为:  %s\n",binary);
+ 
   // 将二进制字符串转换为十六进制字符串
   char hex[25000];  // 二进制转十六进制长度除以四
   binaryToHex(binary, hex);
   printf("压缩后的十六进制为: %s\n", hex);
 
   // 计算 FNV-1a 64位哈希值
-  uint64_t hash = fnv1a_64(binary, strlen(binary));
-  printf("压缩后的HASH值为: 0x%016llx\n", hash);
+  uint64_t hash1 = fnv1a_64(binary, strlen(binary));
+  uint64_t hash2 = fnv1a_64(hex, strlen(hex));
+  printf("压缩后文本二进制的HASH1值为: 0x%016llx\n", hash1);
+  printf("压缩后文本十六进制的HASH2值为: 0x%016llx\n", hash2);
 }
 
 
@@ -284,7 +297,7 @@ void bitEncodeAndHash(const char *content)
  
      // 计算 FNV-1a 64位哈希值
      uint64_t hash = fnv1a_64(binary, strlen(binary));
-     printf("压缩前的哈希值为: 0x%016llx\n", hash);
+     printf("压缩前文本二进制的哈希值为: 0x%016llx\n", hash);
 }
 
 
@@ -365,15 +378,19 @@ int main()
   if (content != NULL)
   {
     printf("文件内容如下：\n%s\n", content);
-
-    // 释放动态分配的内存
-    
   }
 
   root = sortSingleByteCharsByFrequency(filePath, content);
   bitEncodeAndHash(content);
   uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
   printf("字符串 \"%s\" 的FNV-1a 64位哈希值为: 0x%016llx\n", content, hash_value);
+
+
+  printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
+
+
+
+      // 释放动态分配的内存
   freeHuffmanTree(root);
   free(content);
   return 0;
