@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "d:\\mingw\\bin\\../lib/gcc/mingw32/6.3.0/include",
+                "d:\\mingw\\bin\\../lib/gcc/mingw32/6.3.0/../../../../include",
+                "d:\\mingw\\bin\\../lib/gcc/mingw32/6.3.0/include-fixed",
+                "D:\\Program Files\\OpenSSL-Win64\\include",
+                "D:\\Program Files\\OpenSSL-Win64\\bin"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "D:\\MinGW\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
