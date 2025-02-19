@@ -222,19 +222,33 @@ int calculateWPL(HuffmanNode *root, int depth)
   return calculateWPL(root->left, depth + 1) + calculateWPL(root->right, depth + 1);
 }
 
-// 将二进制字符串转换为十六进制字符串
-void binaryToHex(const char *binary, char *hex) {
+// 将二进制字符串转换为位编码
+void binaryToByteData(const char *binary, unsigned char *byteData) {
   int len = strlen(binary);
-  int hexIndex = 0;
-  for (int i = 0; i < len; i += 4) {
+  int byteIndex = 0;
+  for (int i = 0; i < len; i += 8) {
       int value = 0;
-      for (int j = 0; j < 4 && i + j < len; j++) {
+      for (int j = 0; j < 8; j++) {
           value = (value << 1) | (binary[i + j] - '0');
       }
-      sprintf(&hex[hexIndex++], "%x", value);
+      byteData[byteIndex++] = (unsigned char)value;
   }
-  hex[hexIndex] = '\0';
+  byteData[byteIndex] = '\0';
 }
+
+// void binaryToHex(const char *binary, char *hex) {
+//   int len = strlen(binary);
+//   int hexIndex = 0;
+//   for (int i = 0; i < len; i += 8) {
+//       int value = 0;
+//       for (int j = 0; j < 8 && i + j < len; j++) {
+//           value = (value << 1) | (binary[i + j] - '0');
+//       }
+//       sprintf(&hex[hexIndex], "%02x", value);
+//       hexIndex += 1;
+//   }
+//   hex[hexIndex] = '\0';
+// }
 
 // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
 void encodeText(const char *filename, char huffmanCodes[256][100], char *content)
@@ -261,13 +275,19 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
  printf("补零后的二进制文本为:  %s\n",binary);
  
   // 将二进制字符串转换为十六进制字符串
-  char hex[25000];  // 二进制转十六进制长度除以四
-  binaryToHex(binary, hex);
-  printf("压缩后的十六进制为: %s\n", hex);
+  unsigned char byteData[12500];  // 二进制转十六进制长度除以四
+  binaryToByteData(binary, byteData);
+  int len = strlen(binary) / 8;
+  printf("压缩后的十六进制为: ");
+  for (int i = 0; i < len; i++) {
+      printf("%02x", byteData[i]);
+  }
+  printf("\n");
+  printf("压缩后的十六进制第一位为: %x\n", byteData[0]);
 
   // 计算 FNV-1a 64位哈希值
   uint64_t hash1 = fnv1a_64(binary, strlen(binary));
-  uint64_t hash2 = fnv1a_64(hex, strlen(hex));
+  uint64_t hash2 = fnv1a_64(byteData, strlen(byteData));
   printf("压缩后文本二进制的HASH1值为: 0x%016llx\n", hash1);
   printf("压缩后文本十六进制的HASH2值为: 0x%016llx\n", hash2);
 }
@@ -291,13 +311,13 @@ void bitEncodeAndHash(const char *content)
     }
 
      // 将二进制字符串转换为十六进制字符串
-     char hex[len * 2 + 1];
-     binaryToHex(binary, hex);
-     printf("压缩前的十六进制为: %s\n", hex);
+     unsigned char byteData[len + 1];
+     binaryToByteData(binary, byteData);
+     printf("压缩前的十六进制为: %s\n", byteData);
  
      // 计算 FNV-1a 64位哈希值
      uint64_t hash = fnv1a_64(binary, strlen(binary));
-     printf("压缩前文本二进制的哈希值为: 0x%016llx\n", hash);
+     printf("压缩前文本转换成二进制后的哈希值为: 0x%016llx\n", hash);
 }
 
 
@@ -383,7 +403,7 @@ int main()
   root = sortSingleByteCharsByFrequency(filePath, content);
   bitEncodeAndHash(content);
   uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
-  printf("字符串 \"%s\" 的FNV-1a 64位哈希值为: 0x%016llx\n", content, hash_value);
+  printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
 
 
   printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
