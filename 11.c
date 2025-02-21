@@ -87,38 +87,50 @@ char *readFile(char *filePath)
   return fileContent;
 }
 
-// 调整最大堆的函数
-void maxHeapify(CharFreq arr[], int n, int i)
-{
-  int largest = i;
+// 调整最小堆的函数
+void minHeapify(CharFreq arr[], int n, int i) {
+  int smallest = i;
   int left = 2 * i + 1;
   int right = 2 * i + 2;
 
-  if (left < n && arr[left].freq > arr[largest].freq)
-    largest = left;
+  // 先比较频率，如果频率相同再比较字符的字节值
+  if (left < n) {
+    if (arr[left].freq < arr[smallest].freq || 
+        (arr[left].freq == arr[smallest].freq && (unsigned char)arr[left].ch < (unsigned char)arr[smallest].ch)) {
+        smallest = left;
+    }
+  }
 
-  if (right < n && arr[right].freq > arr[largest].freq)
-    largest = right;
+  if (right < n) {
+    if (arr[right].freq < arr[smallest].freq || 
+        (arr[right].freq == arr[smallest].freq && (unsigned char)arr[right].ch < (unsigned char)arr[smallest].ch)) {
+        smallest = right;
+    }
+  }
 
-  if (largest != i)
-  {
-    swap(&arr[i], &arr[largest]);
-    maxHeapify(arr, n, largest);
+  if (smallest != i) {
+    swap(&arr[i], &arr[smallest]);
+    minHeapify(arr, n, smallest);
   }
 }
 
 // 堆排序函数
 void heapSort(CharFreq arr[], int n)
 {
-  // 构建最大堆
+  // 构建最小堆
   for (int i = n / 2 - 1; i >= 0; i--)
-    maxHeapify(arr, n, i);
+    minHeapify(arr, n, i);
 
   // 一个个从堆中取出元素
   for (int i = n - 1; i > 0; i--)
   {
-    swap(&arr[0], &arr[i]);
-    maxHeapify(arr, i, 0);
+      swap(&arr[0], &arr[i]);
+      minHeapify(arr, i, 0);
+  }
+
+   // 反转数组，使结果按从小到大排列
+   for (int i = 0; i < n / 2; i++) {
+    swap(&arr[i], &arr[n - i - 1]);
   }
 }
 
@@ -164,8 +176,11 @@ HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
       }
     }
 
+    // 取两个孩子节点中的最大字节值
+    unsigned char maxCh = ((unsigned char)nodes[min1]->ch > (unsigned char)nodes[min2]->ch) ? (unsigned char)nodes[min1]->ch : (unsigned char)nodes[min2]->ch;
+
     // 创建新节点，合并两个最小频率节点
-    HuffmanNode *newInternalNode = newNode('\0', nodes[min1]->freq + nodes[min2]->freq);
+    HuffmanNode *newInternalNode = newNode((char)maxCh, nodes[min1]->freq + nodes[min2]->freq);
     newInternalNode->left = nodes[min1];
     newInternalNode->right = nodes[min2];
 
@@ -236,20 +251,6 @@ void binaryToByteData(const char *binary, unsigned char *byteData) {
   byteData[byteIndex] = '\0';
 }
 
-// void binaryToHex(const char *binary, char *hex) {
-//   int len = strlen(binary);
-//   int hexIndex = 0;
-//   for (int i = 0; i < len; i += 8) {
-//       int value = 0;
-//       for (int j = 0; j < 8 && i + j < len; j++) {
-//           value = (value << 1) | (binary[i + j] - '0');
-//       }
-//       sprintf(&hex[hexIndex], "%02x", value);
-//       hexIndex += 1;
-//   }
-//   hex[hexIndex] = '\0';
-// }
-
 // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
 void encodeText(const char *filename, char huffmanCodes[256][100], char *content)
 {
@@ -278,18 +279,18 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
   unsigned char byteData[12500];  // 二进制转十六进制长度除以四
   binaryToByteData(binary, byteData);
   int len = strlen(binary) / 8;
-  printf("压缩后的十六进制为: ");
+  printf("压缩后的bit位编码为: ");
   for (int i = 0; i < len; i++) {
       printf("%02x", byteData[i]);
   }
   printf("\n");
-  printf("压缩后的十六进制第一位为: %x\n", byteData[0]);
+  printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
 
   // 计算 FNV-1a 64位哈希值
   uint64_t hash1 = fnv1a_64(binary, strlen(binary));
   uint64_t hash2 = fnv1a_64(byteData, strlen(byteData));
   printf("压缩后文本二进制的HASH1值为: 0x%016llx\n", hash1);
-  printf("压缩后文本十六进制的HASH2值为: 0x%016llx\n", hash2);
+  printf("压缩后文本bit位编码的HASH2值为: 0x%016llx\n", hash2);
 }
 
 
@@ -313,11 +314,12 @@ void bitEncodeAndHash(const char *content)
      // 将二进制字符串转换为十六进制字符串
      unsigned char byteData[len + 1];
      binaryToByteData(binary, byteData);
-     printf("压缩前的十六进制为: %s\n", byteData);
  
      // 计算 FNV-1a 64位哈希值
-     uint64_t hash = fnv1a_64(binary, strlen(binary));
-     printf("压缩前文本转换成二进制后的哈希值为: 0x%016llx\n", hash);
+     uint64_t hash3 = fnv1a_64(binary, strlen(binary));
+     uint64_t hash4 = fnv1a_64(binary, strlen(byteData));
+     printf("压缩前文本转换成二进制后的哈希值为: 0x%016llx\n", hash3);
+     printf("压缩前文本转换成bit位编码后的哈希值为: 0x%016llx\n", hash4);
 }
 
 
@@ -392,7 +394,7 @@ int main()
 {
   char *content;
   HuffmanNode *root;
-  char filePath[] = "test.txt";
+  char filePath[] = ".\\test2\\yuanxi.txt";
   // char filePath[] = "yuanxi.txt";
   content = readFile(filePath);
   if (content != NULL)
