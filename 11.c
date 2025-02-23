@@ -28,6 +28,7 @@ typedef struct
 {
   char ch;
   int freq;
+  struct CharFreq *left, *right;
 } CharFreq;
 
 // 定义哈夫曼树节点结构体
@@ -45,6 +46,15 @@ void swap(CharFreq *a, CharFreq *b)
   *a = *b;
   *b = temp;
 }
+
+// 交换两个 CharFreq 结构体的函数
+void swap1(HuffmanNode **a, HuffmanNode **b)
+{
+  HuffmanNode *temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
 
 //读取文件信息
 char *readFile(char *filePath)
@@ -114,16 +124,45 @@ void minHeapify(CharFreq arr[], int n, int i) {
   }
 }
 
+
+// 调整最小堆的函数
+void minHeapify1(HuffmanNode *arr[], int n, int i) {
+  int smallest = i;
+  int left = 2 * i + 1;
+  int right = 2 * i + 2;
+
+  // 先比较频率，如果频率相同再比较字符的字节值
+  if (left < n) {
+    if (arr[left]->freq < arr[smallest]->freq || 
+        (arr[left]->freq == arr[smallest]->freq && (unsigned char)arr[left]->ch < (unsigned char)arr[smallest]->ch)) {
+        smallest = left;
+    }
+  }
+
+  if (right < n) {
+    if (arr[right]->freq < arr[smallest]->freq || 
+        (arr[right]->freq == arr[smallest]->freq && (unsigned char)arr[right]->ch < (unsigned char)arr[smallest]->ch)) {
+        smallest = right;
+    }
+  }
+
+  if (smallest != i) {
+    swap1(&arr[i], &arr[smallest]);
+    minHeapify1(arr, n, smallest);
+  }
+}
+
 // 堆排序函数
 void heapSort(CharFreq arr[], int n)
 {
-  // 构建最小堆
+  // 构建最小堆，构建完后，此时arr[0]存着最小值
   for (int i = n / 2 - 1; i >= 0; i--)
     minHeapify(arr, n, i);
 
   // 一个个从堆中取出元素
   for (int i = n - 1; i > 0; i--)
   {
+    //把最小值存在数组最后，对n-1进行最小堆排序，此时最小的存在a[0]中
       swap(&arr[0], &arr[i]);
       minHeapify(arr, i, 0);
   }
@@ -138,11 +177,75 @@ void heapSort(CharFreq arr[], int n)
 HuffmanNode *newNode(char ch, int freq)
 {
   HuffmanNode *node = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+  if (node == NULL) {
+    fprintf(stderr, "内存分配失败\n");
+    return NULL;
+  }
   node->ch = ch;
   node->freq = freq;
   node->left = node->right = NULL;
   return node;
 }
+
+// // 构建哈夫曼树
+// HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
+// {
+//   HuffmanNode **nodes = (HuffmanNode **)malloc(n * sizeof(HuffmanNode *));
+//   for (int i = 0; i < n; i++)
+//   {
+//     nodes[i] = newNode(arr[i].ch, arr[i].freq);
+//   }
+
+//   while (n > 1)
+//   {
+//     // 此时词频表的排序是从小到大，利用词频表找到频率最小的两个节点，分别是0和1
+//     int min1 = 0, min2 = 1;
+//     if (nodes[min1]->freq > nodes[min2]->freq)
+//     {
+//       int temp = min1;
+//       min1 = min2;
+//       min2 = temp;
+//     }
+
+//     //继续往后找最小的，时刻确保min1<min2
+//     for (int i = 2; i < n; i++)
+//     {
+//       if (nodes[i]->freq < nodes[min1]->freq)
+//       {
+//         min2 = min1;
+//         min1 = i;
+//       }
+//       else if (nodes[i]->freq < nodes[min2]->freq)
+//       {
+//         min2 = i;
+//       }
+//     }
+
+//     // 取两个孩子节点中的最大字节值
+//     unsigned char maxCh = ((unsigned char)nodes[min1]->ch > (unsigned char)nodes[min2]->ch) ? (unsigned char)nodes[min1]->ch : (unsigned char)nodes[min2]->ch;
+
+//     // 创建新节点，合并两个最小频率节点
+//     HuffmanNode *newInternalNode = newNode((char)maxCh, nodes[min1]->freq + nodes[min2]->freq);
+//     newInternalNode->left = nodes[min1];
+//     newInternalNode->right = nodes[min2];
+
+//     // 将新节点放入数组中
+//     if (min1 < min2)
+//     {
+//       nodes[min1] = newInternalNode;
+//       nodes[min2] = nodes[n - 1];
+//     }
+//     else
+//     {
+//       nodes[min2] = newInternalNode;
+//       nodes[min1] = nodes[n - 1];
+//     }
+//     n--;
+//   }
+
+//   return nodes[0];
+// }
+
 
 // 构建哈夫曼树
 HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
@@ -152,55 +255,84 @@ HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
   {
     nodes[i] = newNode(arr[i].ch, arr[i].freq);
   }
-
+  HuffmanNode *min1;
+  HuffmanNode *min2;
+  int i;
+ 
   while (n > 1)
   {
-    // 找到频率最小的两个节点
-    int min1 = 0, min2 = 1;
-    if (nodes[min1]->freq > nodes[min2]->freq)
-    {
-      int temp = min1;
-      min1 = min2;
-      min2 = temp;
+    // printf("进入循环时n的值为：%d\n", n);
+    min1 = nodes[0];
+    // printf("此时min1的值为：%c,%d\n", nodes[0]->ch, nodes[0]->freq);
+    
+    nodes[0] = nodes[n - 1];
+    n--;
+
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        minHeapify1(nodes, n, i);
     }
-    for (int i = 2; i < n; i++)
-    {
-      if (nodes[i]->freq < nodes[min1]->freq)
-      {
-        min2 = min1;
-        min1 = i;
-      }
-      else if (nodes[i]->freq < nodes[min2]->freq)
-      {
-        min2 = i;
-      }
-    }
+
+    min2 = nodes[0];
+    // printf("此时min2的值为：%c,%d\n", nodes[0]->ch, nodes[0]->freq);
+    nodes[0] = nodes[n - 1];
+    n--;
+    
+    
+
 
     // 取两个孩子节点中的最大字节值
-    unsigned char maxCh = ((unsigned char)nodes[min1]->ch > (unsigned char)nodes[min2]->ch) ? (unsigned char)nodes[min1]->ch : (unsigned char)nodes[min2]->ch;
+
+
+    unsigned char maxCh = ((unsigned char)min1->ch > (unsigned char)min2->ch) ? (unsigned char)min1->ch : (unsigned char)min2->ch;
 
     // 创建新节点，合并两个最小频率节点
-    HuffmanNode *newInternalNode = newNode((char)maxCh, nodes[min1]->freq + nodes[min2]->freq);
-    newInternalNode->left = nodes[min1];
-    newInternalNode->right = nodes[min2];
+    HuffmanNode *newInternalNode = newNode((char)maxCh, min1->freq + min2->freq);
+    // printf("%c,%d\n", newInternalNode->ch, newInternalNode->freq);
+    newInternalNode->left = min1;
+    newInternalNode->right = min2;
 
     // 将新节点放入数组中
-    if (min1 < min2)
-    {
-      nodes[min1] = newInternalNode;
-      nodes[min2] = nodes[n - 1];
-    }
-    else
-    {
-      nodes[min2] = newInternalNode;
-      nodes[min1] = nodes[n - 1];
-    }
-    n--;
-  }
+    nodes[n] = newInternalNode;
+    n++;
 
+    int i = n - 1;
+    // while (i > 0)
+    // {
+    //     int parent = (i - 1) / 2;
+    //     if (nodes[i]->freq < nodes[parent]->freq ||
+    //       (nodes[i]->freq == nodes[parent]->freq && (unsigned char)nodes[i]->ch < (unsigned char)nodes[parent]->ch))
+    //     {
+    //         HuffmanNode *temp = nodes[i];
+    //         nodes[i] = nodes[parent];
+    //         nodes[parent] = temp;
+    //         i = parent;
+    //     }
+      
+    //     else
+    //     {
+    //         break;
+    //     }
+    // }
+    for (int i = n / 2 - 1; i >= 0; i--) {
+      minHeapify1(nodes, n, i);
+  //     for (int i = 0; i < n; i++)
+  // {
+  //   printf("字符 '0x%02x' 出现的频次为: %d\n", (unsigned char)nodes[i]->ch, nodes[i]->freq);
+  // }
+  }
+    // printf("\n");
+  }
+  // printf("成功结束哈夫曼树的构建了！\n");
+  // printf("\n");
+  // printf("0%c,%d\n", nodes[0]->ch, nodes[0]->freq);
+  // printf("1%c,%d\n", nodes[0]->left->ch, nodes[0]->left->freq);
+  // printf("2%c,%d\n", nodes[0]->right->ch, nodes[0]->right->freq);
+  // printf("3%c,%d\n", nodes[0]->right->left->ch, nodes[0]->right->left->freq);
+  // printf("4%c,%d\n", nodes[0]->right->right->ch, nodes[0]->right->right->freq);
+  // // printf("5%c,%d\n", nodes[0]->right->right->left->ch, nodes[0]->right->right->left->freq);
+  // // printf("6%c,%d\n", nodes[0]->right->right->right->ch, nodes[0]->right->right->right->freq);
   return nodes[0];
 }
-
 
 // 生成哈夫曼编码并存储到数组中
 void generateHuffmanCodes(HuffmanNode *root, int arr[], int top, char huffmanCodes[256][100]) {
@@ -279,9 +411,14 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
   unsigned char byteData[12500];  // 二进制转十六进制长度除以四
   binaryToByteData(binary, byteData);
   int len = strlen(binary) / 8;
-  printf("压缩后的bit位编码为: ");
-  for (int i = 0; i < len; i++) {
+  printf("压缩后的bit位编码为: \n");
+  for (int i = 0,  j = 0; i < len; i++,j++) {
+    if(j == 16) {
+      printf("\n");
+      j = 0;
+    }
       printf("%02x", byteData[i]);
+      
   }
   printf("\n");
   printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
@@ -370,9 +507,11 @@ HuffmanNode* sortSingleByteCharsByFrequency(const char *filename, char *content 
   for (int i = 0; i < 256; i++) {
     huffmanCodes[i][0] = '\0';
   }
+  printf("接下来开始进行哈夫曼编码\n");
   generateHuffmanCodes(root, arr, top, huffmanCodes);
 
   // 计算 WPL
+  printf("接下来开始计算WPL了\n");
   int wpl = calculateWPL(root, 0);
   printf("哈夫曼树的带权路径长度 (WPL) 为: %d\n", wpl);
 
