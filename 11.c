@@ -97,6 +97,33 @@ char *readFile(char *filePath)
   return fileContent;
 }
 
+int writeFile(const char *filename, const void *array, size_t element_size, size_t len) {
+  // 以写入模式打开文件
+  FILE *file = fopen(filename, "wb");
+  if (file == NULL) {
+    perror("无法打开文件");
+    return -1;
+}
+
+// 使用 fwrite 函数将数组内容写入文件
+size_t elements_written = fwrite(array, element_size, len, file);
+if (elements_written != len) {
+    perror("写入文件时发生错误");
+    fclose(file);
+    return -1;
+}
+
+// 关闭文件
+if (fclose(file) != 0) {
+    perror("关闭文件时发生错误");
+    return -1;
+}
+
+  // 写入成功，返回 0
+  printf("关闭文件成功\n");
+  return 0;
+}
+
 // 调整最小堆的函数
 void minHeapify(CharFreq arr[], int n, int i) {
   int smallest = i;
@@ -186,65 +213,6 @@ HuffmanNode *newNode(char ch, int freq)
   node->left = node->right = NULL;
   return node;
 }
-
-// // 构建哈夫曼树
-// HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
-// {
-//   HuffmanNode **nodes = (HuffmanNode **)malloc(n * sizeof(HuffmanNode *));
-//   for (int i = 0; i < n; i++)
-//   {
-//     nodes[i] = newNode(arr[i].ch, arr[i].freq);
-//   }
-
-//   while (n > 1)
-//   {
-//     // 此时词频表的排序是从小到大，利用词频表找到频率最小的两个节点，分别是0和1
-//     int min1 = 0, min2 = 1;
-//     if (nodes[min1]->freq > nodes[min2]->freq)
-//     {
-//       int temp = min1;
-//       min1 = min2;
-//       min2 = temp;
-//     }
-
-//     //继续往后找最小的，时刻确保min1<min2
-//     for (int i = 2; i < n; i++)
-//     {
-//       if (nodes[i]->freq < nodes[min1]->freq)
-//       {
-//         min2 = min1;
-//         min1 = i;
-//       }
-//       else if (nodes[i]->freq < nodes[min2]->freq)
-//       {
-//         min2 = i;
-//       }
-//     }
-
-//     // 取两个孩子节点中的最大字节值
-//     unsigned char maxCh = ((unsigned char)nodes[min1]->ch > (unsigned char)nodes[min2]->ch) ? (unsigned char)nodes[min1]->ch : (unsigned char)nodes[min2]->ch;
-
-//     // 创建新节点，合并两个最小频率节点
-//     HuffmanNode *newInternalNode = newNode((char)maxCh, nodes[min1]->freq + nodes[min2]->freq);
-//     newInternalNode->left = nodes[min1];
-//     newInternalNode->right = nodes[min2];
-
-//     // 将新节点放入数组中
-//     if (min1 < min2)
-//     {
-//       nodes[min1] = newInternalNode;
-//       nodes[min2] = nodes[n - 1];
-//     }
-//     else
-//     {
-//       nodes[min2] = newInternalNode;
-//       nodes[min1] = nodes[n - 1];
-//     }
-//     n--;
-//   }
-
-//   return nodes[0];
-// }
 
 
 // 构建哈夫曼树
@@ -354,7 +322,6 @@ void generateHuffmanCodes(HuffmanNode *root, int arr[], int top, char huffmanCod
   }
 }
 
-
 // 计算哈夫曼树的 WPL
 int calculateWPL(HuffmanNode *root, int depth)
 {
@@ -384,7 +351,7 @@ void binaryToByteData(const char *binary, unsigned char *byteData) {
 }
 
 // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
-void encodeText(const char *filename, char huffmanCodes[256][100], char *content)
+void encodeText(const char *filename, char huffmanCodes[256][100], char *content, const char *filename2)
 {
 
   char binary[100000] = "";  // 假设编码后的二进制字符串长度不超过 100000
@@ -418,10 +385,13 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
       j = 0;
     }
       printf("%02x", byteData[i]);
-      
   }
   printf("\n");
   printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
+
+  //把编码写入文本文件
+
+  writeFile(filename2, byteData, sizeof(char), len);
 
   // 计算 FNV-1a 64位哈希值
   uint64_t hash1 = fnv1a_64(binary, strlen(binary));
@@ -461,7 +431,7 @@ void bitEncodeAndHash(const char *content)
 
 
 // 统计文件中单字节字符频次并排序的函数
-HuffmanNode* sortSingleByteCharsByFrequency(const char *filename, char *content )
+HuffmanNode* sortSingleByteCharsByFrequency(const char *filename, char *content, const char *filename2)
 {
  
   // 假设单字节字符集，共 256 个字符
@@ -516,7 +486,7 @@ HuffmanNode* sortSingleByteCharsByFrequency(const char *filename, char *content 
   printf("哈夫曼树的带权路径长度 (WPL) 为: %d\n", wpl);
 
   // 对文本进行哈夫曼编码
-  encodeText(filename, huffmanCodes, content);
+  encodeText(filename, huffmanCodes, content, filename2);
   return root;
 }
 
@@ -534,6 +504,7 @@ int main()
   char *content;
   HuffmanNode *root;
   char filePath[] = ".\\test2\\yuanxi.txt";
+  char filePath2[] = ".\\result2\\yuanxi.hfm";
   // char filePath[] = "yuanxi.txt";
   content = readFile(filePath);
   if (content != NULL)
@@ -541,8 +512,8 @@ int main()
     printf("文件内容如下：\n%s\n", content);
   }
 
-  root = sortSingleByteCharsByFrequency(filePath, content);
-  bitEncodeAndHash(content);
+  root = sortSingleByteCharsByFrequency(filePath, content, filePath2);
+  // bitEncodeAndHash(content);
   uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
   printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
 
