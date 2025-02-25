@@ -1,1 +1,1 @@
-writeFile
+generateHuffmanCodes
