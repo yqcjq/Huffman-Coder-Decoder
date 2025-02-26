@@ -1,15 +1,89 @@
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <string.h>
+
+// // 定义哈夫曼树节点结构体
+// typedef struct HuffmanNode {
+//     char ch;
+//     int freq;
+//     struct HuffmanNode *left, *right;
+// } HuffmanNode;
+
+// // 根据哈夫曼编码遍历哈夫曼树找到对应字符
+// char findCharByHuffmanCode(HuffmanNode *root, const char *huffmanCode) {
+//     HuffmanNode *current = root;
+//     for (int i = 0; huffmanCode[i] != '\0'; i++) {
+//         if (huffmanCode[i] == '0') {
+//             if (current->left == NULL) {
+//                 printf("哈夫曼编码与哈夫曼树不匹配，无法继续遍历\n");
+//                 return '\0';
+//             }
+//             current = current->left;
+//         } else if (huffmanCode[i] == '1') {
+//             if (current->right == NULL) {
+//                 printf("哈夫曼编码与哈夫曼树不匹配，无法继续遍历\n");
+//                 return '\0';
+//             }
+//             current = current->right;
+//         } else {
+//             printf("无效的哈夫曼编码字符: %c\n", huffmanCode[i]);
+//             return '\0';
+//         }
+//     }
+//     return current->ch;
+// }
+
+// // 示例代码，用于测试
+// int main() {
+//     // 这里简单构建一个示例哈夫曼树，实际应用中需要根据字符频次构建
+//     HuffmanNode *root = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+//     root->ch = '\0';
+//     root->freq = 0;
+//     root->left = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+//     root->left->ch = 'A';
+//     root->left->freq = 10;
+//     root->left->left = NULL;
+//     root->left->right = NULL;
+//     root->right = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+//     root->right->ch = '\0';
+//     root->right->freq = 0;
+//     root->right->left = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+//     root->right->left->ch = 'B';
+//     root->right->left->freq = 15;
+//     root->right->left->left = NULL;
+//     root->right->left->right = NULL;
+//     root->right->right = (HuffmanNode *)malloc(sizeof(HuffmanNode));
+//     root->right->right->ch = (char)0xc4;
+//     root->right->right->freq = 20;
+//     root->right->right->left = NULL;
+//     root->right->right->right = NULL;
+
+//     const char *huffmanCode = "101110110001010111111";
+//     char foundChar = findCharByHuffmanCode(root, huffmanCode);
+//     if (foundChar != '\0') {
+//         printf("找到字符: 0x%02x\n", (unsigned char)foundChar);
+//     }
+
+//     // 释放哈夫曼树的内存
+//     free(root->left);
+//     free(root->right->left);
+//     free(root->right->right);
+//     free(root->right);
+//     free(root);
+
+//     return 0;
+// }
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
-#include <time.h>
 #define MAX_SIZE 1024
 
-// 手动定义 TIME_UTC
-#ifndef TIME_UTC
-#define TIME_UTC 1
-#endif
+
 
 // FNV-1a 64位哈希算法的初始值
 #define FNV1A_64_INIT 0xcbf29ce484222325ULL
@@ -60,6 +134,30 @@ void swap1(HuffmanNode **a, HuffmanNode **b)
   *b = temp;
 }
 
+// 根据哈夫曼编码遍历哈夫曼树找到对应字符
+char findCharByHuffmanCode(HuffmanNode *root, const char *huffmanCode) {
+    HuffmanNode *current = root;
+    for (int i = 0; huffmanCode[i] != '\0'; i++) {
+        if (huffmanCode[i] == '0') {
+            if (current->left == NULL) {
+                printf("哈夫曼编码与哈夫曼树不匹配，无法继续遍历\n");
+                return '\0';
+            }
+            current = current->left;
+        } else if (huffmanCode[i] == '1') {
+            if (current->right == NULL) {
+                printf("哈夫曼编码与哈夫曼树不匹配，无法继续遍历\n");
+                return '\0';
+            }
+            current = current->right;
+        } else {
+            printf("无效的哈夫曼编码字符: %c\n", huffmanCode[i]);
+            return '\0';
+        }
+    }
+    return current->ch;
+}
+
 //读取文件信息
 char *readFile(char *filePath,char *filePath3)
 {
@@ -100,7 +198,7 @@ char *readFile(char *filePath,char *filePath3)
   fclose(file);
 
   // 打开用于写入的文件
-  FILE *file3 = fopen(filePath3, "wb");
+  FILE *file3 = fopen(filePath3, "w");
   if (file3 == NULL) {
       perror("无法打开输出文件");
       return NULL;
@@ -448,17 +546,16 @@ int calculateWPL(HuffmanNode *root, int depth)
 // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
 void encodeText(const char *filename, char huffmanCodes[256][100], char *content, const char *filename2)
 {
-  printf("正在进行哈夫曼编码\n ");
-  char binary[1000000] = "";  // 假设编码后的二进制字符串长度不超过 1000000
-  printf("压缩后的二进制文本为:\n ");
+
+  char binary[1000000] = "";  // 假设编码后的二进制字符串长度不超过 100000
+  printf("压缩后的二进制文本为: ");
   for (int i = 0; content[i] != '\0'; i++)
   {
     strcat(binary, huffmanCodes[(unsigned char)content[i]]);
-    printf("%s", huffmanCodes[(unsigned char)content[i]]);
+    // printf("%s", huffmanCodes[(unsigned char)content[i]]);
   }
   printf("\n");
 
-  printf("已经压缩成二进制文本了\n ");
  // 计算需要补零的位数
  int binaryLength = strlen(binary);
  int padding = 8 - (binaryLength % 8);
@@ -475,14 +572,14 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
   binaryToByteData(binary, byteData);
   printf("补零后的二进制文本为:  %s\n",binary);
   int len = strlen(binary) / 8;
-  printf("压缩后的bit位编码为: \n");
-  for (int i = 0,  j = 0; i < len; i++,j++) {
-    if(j == 16) {
-      printf("\n");
-      j = 0;
-    }
-      printf("%02x", byteData[i]);
-  }
+  // printf("压缩后的bit位编码为: \n");
+  // for (int i = 0,  j = 0; i < len; i++,j++) {
+  //   if(j == 16) {
+  //     printf("\n");
+  //     j = 0;
+  //   }
+  //     printf("%02x", byteData[i]);
+  // }
   printf("\n");
   printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
 
@@ -577,14 +674,14 @@ HuffmanNode* sortSingleByteCharsByFrequency(const char *filename, char *content,
   
   generateHuffmanCodes(root, arr, top, huffmanCodes,filename3);
 
-  // 计算 WPL
-  printf("接下来开始计算WPL了\n");
-  int wpl = calculateWPL(root, 0);
-  printf("哈夫曼树的带权路径长度 (WPL) 为: %d\n", wpl);
+  // // 计算 WPL
+  // printf("接下来开始计算WPL了\n");
+  // int wpl = calculateWPL(root, 0);
+  // printf("哈夫曼树的带权路径长度 (WPL) 为: %d\n", wpl);
 
-  // 对文本进行哈夫曼编码
-  encodeText(filename, huffmanCodes, content, filename2);
-  return root;
+  // // 对文本进行哈夫曼编码
+  // encodeText(filename, huffmanCodes, content, filename2);
+  // return root;
 }
 
 //释放哈夫曼树内存的函数
@@ -598,253 +695,8 @@ void freeHuffmanTree(HuffmanNode *root) {
 
 
 
-
-//----------------------------以下开始是解码的函数---------------------------------
-
-
-
-
-void deleteSpace(char *str)
-{
-	char *str_c=str;
-	int i,j=0;
-	for(i=0;str[i]!='\0';i++)
-	{
-		if(str[i]!=' ')
-			str_c[j++]=str[i];
-	}
-	str_c[j]='\0';
-	str=str_c;	
-}
-
-// 创建新的哈夫曼树节点
-HuffmanNode* decodenewNode() {
-    HuffmanNode* node = (HuffmanNode*)malloc(sizeof(HuffmanNode));
-    if (node == NULL) {
-        perror("内存分配失败");
-        exit(EXIT_FAILURE);
-    }
-    node->ch = '\0';
-    node->left = node->right = NULL;
-    return node;
-}
-
-// 从十六进制字符转换为对应的整数值
-int hexCharToInt(char hexChar) {
-    if (hexChar >= '0' && hexChar <= '9') {
-        return hexChar - '0';
-    } else if (hexChar >= 'A' && hexChar <= 'F') {
-        return hexChar - 'A' + 10;
-    } else if (hexChar >= 'a' && hexChar <= 'f') {
-        return hexChar - 'a' + 10;
-    }
-    return -1;
-}
-
-// 将十六进制字符串转换为二进制字符串
-void hexToBinary(const char *hex, char *binary, int bitCount) {
-    int hexIndex = 0;
-    int binIndex = 0;
-    while (bitCount > 0) {
-        int hexVal = hexCharToInt(hex[hexIndex]);
-        for (int i = 3; i >= 0 && bitCount > 0; i--) {
-            binary[binIndex++] = (hexVal & (1 << i))? '1' : '0';
-            bitCount--;
-        }
-        hexIndex++;
-    }
-    binary[binIndex] = '\0';
-}
-
-// 将十六进制文件内容转换为二进制字符串
-void hexFileToBinary(const char *filename, char *binary) {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL) {
-        perror("无法打开文件");
-        return;
-    }
-
-    int binIndex = 0;
-    unsigned char byte;
-    while (fread(&byte, 1, 1, file) == 1) {
-        for (int i = 7; i >= 0; i--) {
-            binary[binIndex++] = (byte & (1 << i))? '1' : '0';
-        }
-    }
-    binary[binIndex] = '\0';
-    fclose(file);
-}
-
-// 构建哈夫曼树
-void decodebuildHuffmanTree(HuffmanNode *root, char *code, char ch) {
-    HuffmanNode *current = root;
-    for (int i = 0; code[i] != '\0'; i++) {
-        if (code[i] == '0') {
-            if (current->left == NULL) {
-                current->left = decodenewNode();
-            }
-            current = current->left;
-        } else {
-            if (current->right == NULL) {
-                current->right = decodenewNode();
-            }
-            current = current->right;
-        }
-    }
-    current->ch = ch;
-}
-
-// 解码函数
-void decode(const char *filename, const char *encodedFilename,  const char *filename2) {
-    FILE *file = fopen(filename, "rb");
-    if (file == NULL) {
-        perror("无法打开文件1");
-        return;
-    }
-
-    // 读取解码后文本的总字节数
-    int totalBytes;
-    fscanf(file, "%d\n", &totalBytes);
-    printf("读到的字节数为: %d\n", totalBytes);
-    // 构建哈夫曼树的根节点
-    HuffmanNode *root = decodenewNode();
-    printf("成功建表\n");
-    // 读取编码表
-    char line[100];
-    while (fgets(line, sizeof(line), file) != NULL) {
-        char ch[3];
-        int bitCount;
-        char hexCode[30];
-        // sscanf(line, "0x%2s 0x%x %s", ch, &bitCount, hexCode);
-        deleteSpace(line);
-        ch[0] = line[2];
-        ch[1] = line[3];
-        ch[2] = '\0';
-        bitCount = hexCharToInt(line[6]) * 16 + hexCharToInt(line[7]);
-        int count,i;
-
-        for (count = 0,i=0; count < ((bitCount-1) / 8 + 1); count++)
-        {
-          hexCode[i] = line[i+10+2*count];
-          i++;
-          hexCode[i] = line[i+10+2*count];
-          i++;
-        }
-        hexCode[i] = '\0';
-      
-        char binaryCode[100];
-        hexToBinary(hexCode, binaryCode, bitCount);
-        printf("字符%s为%s\n", ch, binaryCode);
-        decodebuildHuffmanTree(root, binaryCode, (char)strtol(ch, NULL, 16));
-    }
-    fclose(file);
-    printf("成功建树\n");
-
-    // // 将十六进制文件内容转换为二进制字符串
-    // char encodedBinary[100000];
-    // hexFileToBinary(encodedFilename, encodedBinary);
-
-    // // 解码过程
-    // char decodedText[100000];
-    // int decodedIndex = 0;
-    // HuffmanNode *current = root;
-    // for (int i = 0; encodedBinary[i] != '\0'; i++) {
-    //     if (encodedBinary[i] == '0') {
-    //         current = current->left;
-    //     } else {
-    //         current = current->right;
-    //     }
-    //     if (current->ch != '\0') {
-    //         decodedText[decodedIndex++] = current->ch;
-    //         current = root;
-    //     }
-    // }
-    // decodedText[decodedIndex] = '\0';
-
-    // // 输出解码后的文本
-    
-    // uint64_t hash1 = fnv1a_64(decodedText, strlen(decodedText));
-    // printf("解码后的文本为: %s\n", decodedText);
-    // printf("解码后的哈希值为: 0x%016llx\n", hash1);
-
-    // // 将解码后的文本写入文件
-    // char decodedFilename[100];
-
-    // FILE *decodedFile = fopen(filename2, "w");
-    // if (decodedFile == NULL) {
-    //     perror("无法打开输出文件");
-    //     return;
-    // }
-    // fputs(decodedText, decodedFile);
-    // fclose(decodedFile);
-
-    
-    // 将十六进制文件内容转换为二进制字符串
-    char encodedBinary[1000000];
-    hexFileToBinary(encodedFilename, encodedBinary);
-
-    // 打开输出文件
-    FILE *decodedFile = fopen(filename2, "wb");
-    if (decodedFile == NULL) {
-        perror("无法打开输出文件");
-        return;
-    }
-
-    int decodedBytes = 0;
-    int startIndex = 0;
-    HuffmanNode *current = root;
-    char decodedText[505];  // 用于存储每次解码的结果
-
-    int i;
-    while (decodedBytes < totalBytes) {
-        int blockDecodedBytes = 0;
-        int decodedIndex = 0;
-        for ( i = startIndex; encodedBinary[i] != '\0'; i++) {
-            
-            if (encodedBinary[i] == '0') {
-                current = current->left;
-            } else {
-                current = current->right;
-            }
-            if (current->ch != '\0') {
-                decodedText[decodedIndex++] = current->ch;
-                blockDecodedBytes++;
-                decodedBytes++;
-                current = root;
-                if (blockDecodedBytes >= 500 || decodedBytes >= totalBytes) {
-                    break;
-                }
-            }
-        }
-
-        // 处理跨块未完成的编码
-        if (current != root) {
-            // 这里可以添加更复杂的处理逻辑，暂时简单提示
-            printf("警告：存在跨块未完成的编码，可能需要更复杂处理\n");
-            // 可以考虑记录状态，结合下一块继续解码
-        }
-
-        decodedText[decodedIndex] = '\0';
-        // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
-        // 将解码结果写入文件
-        fputs(decodedText, decodedFile);
-        // startIndex += i - startIndex;
-        startIndex = i+1;
-    }
-
-    fclose(decodedFile);
-
-}
-
-
 int main()
 {
-  clock_t start, end;
-    double cpu_time_used;
-
-    // 记录开始时间
-    start = clock();
-
   char *content;
   HuffmanNode *root;
 
@@ -897,34 +749,41 @@ int main()
   content = readFile(filePath1,filePath3);
   if (content != NULL)
   {
-    printf("文件内容如下：\n%s\n", content);
+    // printf("文件内容如下：\n%s\n", content);
   }
 
   root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
-  // bitEncodeAndHash(content);
-  uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
-  printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
-  // printf("原字符串的哈希值为: 0x%016llx\n",  hash_value);
+    // const char *huffmanCode = "101110110001010111111";
+    // const char *huffmanCode = "110000010010010010111";
+    const char *huffmanCode = "1";
+    //四五位
+//0xe6是011，我输出的是0011，正确应该0011✅
+//0xe4是110，我输出的是0110，正确应该0110✅
+//0xe9是0001，我输出的是00001，正确应该00001✅
+//0xba是0000，我输出的是00000，正确应该00000✅
+
+//六七位
+//0xaf我输出的是011110，正确应该是011110
+//0x9c我输出的是100100，正确应该是100100
+
+//八位
+//0x93我输出的是10000111，正确应该是10000111
+//0x9E我输出的是00101011，正确应该是00101011
+//0x93我输出的是10000111，正确应该是10000111
+//0x93我输出的是10000111，正确应该是10000111
+//0x93我输出的是10000111，正确应该是10000111
+//0x93我输出的是10000111，正确应该是10000111
+//0x93我输出的是10000111，正确应该是10000111
+
+//总结我建出来的树和实际建出来的树，开头差了一个0
+    char foundChar = findCharByHuffmanCode(root, huffmanCode);
+    if (foundChar != '\0') {
+        printf("找到字符: 0x%02x\n", (unsigned char)foundChar);
+    }
 
   // 释放动态分配的内存
   freeHuffmanTree(root);
   free(content);   
 
-  printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
-
-
-  decode(filename4, filename6, filename5);
-  // char *content2;
-  // content2 = readFile(filename5, filePath3);
-  // uint64_t hash_value2 = fnv1a_64(content2, strlen(content2) ); 
-  // printf("解压后字符串 \"%s\" 的哈希值为: 0x%016llx\n", content2, hash_value2);
- 
-  // 记录结束时间
-  end = clock();
-
-  // 计算使用的 CPU 时间（秒）
-  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-  printf("程序运行时间: %f 秒\n", cpu_time_used);
   return 0;
 }

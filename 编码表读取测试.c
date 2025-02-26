@@ -72,7 +72,7 @@ void buildHuffmanTree(HuffmanNode *root, char *code, char ch) {
   HuffmanNode *root = newNode();
   char ch[3];
   int count,i;
-  char line[100] = "0x120x130x140x150x160x170x180x190x20";
+  char line[100] = "0x2E0x120xC10x720x80";
   char hexCode[30];
   ch[0] = line[2];
   ch[1] = line[3];

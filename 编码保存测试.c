@@ -39,7 +39,7 @@ void processBinary(const char *input, int maxLength) {
 }
 
 int main() {
-    const char *testBinary = "010001110";
+    const char *testBinary = "1011101101110010100";
     processBinary(testBinary, strlen(testBinary));
     return 0;
 }
