@@ -358,6 +358,53 @@ HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
   return nodes[0];
 }
 
+//保存哈夫曼编码表到文件
+void saveHuffmanCodes(HuffmanNode *root, char huffmanCodes[256][100] , const char *filename3){
+
+  char processedBinary[100];
+  strcpy(processedBinary, huffmanCodes[(unsigned char)root->ch]);
+
+   // 计算需要补零的位数
+   int binaryLength = strlen(processedBinary);
+   int padding = 8 - (binaryLength % 8);
+   if (padding < 8) {
+       for (int i = 0; i < padding; i++) {
+           strcat(processedBinary, "0");
+       }
+   }
+
+   char *byteData=processedBinary;
+   FILE *file3 = fopen(filename3, "a");
+   if (file3 == NULL) {
+    perror("无法打开输出文件");
+   }
+
+   fprintf(file3, "0x%02x 0x%02x", (unsigned char)root->ch, binaryLength);
+
+  int binaryLength2 = strlen(processedBinary);
+  for (int i = 0; i < binaryLength2; i += 8) {
+      char group[9];
+      strncpy(group, processedBinary + i, 8);
+      group[8] = '\0';
+      int decimal = 0;
+      for (int j = 0; j < 8; j++) {
+          if (group[j] == '1') {
+              decimal += (int)pow(2, 7 - j);
+          }
+      }
+
+     
+      // 将文件大小信息写入文件
+      fprintf(file3, " 0x%02x", decimal);
+      // if(decimal !=)
+      // 关闭输出文件
+      
+  }
+  fprintf(file3, "\n");
+  fclose(file3);
+
+}
+
 // 生成哈夫曼编码并存储到数组中
 void generateHuffmanCodes(HuffmanNode *root, int arr[], int top, char huffmanCodes[256][100], const char *filename3) {
   if (root->left) {
@@ -375,55 +422,8 @@ void generateHuffmanCodes(HuffmanNode *root, int arr[], int top, char huffmanCod
       }
       huffmanCodes[(unsigned char)root->ch][i] = '\0';
       printf("字符 '0x%02x' 的哈夫曼编码为: %s\n", (unsigned char)root->ch, huffmanCodes[(unsigned char)root->ch]);
-      safeHuffmanCodes(root, huffmanCodes, filename3);
+      saveHuffmanCodes(root, huffmanCodes, filename3);
   }
-}
-
-
-void safeHuffmanCodes(HuffmanNode *root, char huffmanCodes[256][100] , const char *filename3){
-
-      char processedBinary[100];
-      strcpy(processedBinary, huffmanCodes[(unsigned char)root->ch]);
-
-       // 计算需要补零的位数
-       int binaryLength = strlen(processedBinary);
-       int padding = 8 - (binaryLength % 8);
-       if (padding < 8) {
-           for (int i = 0; i < padding; i++) {
-               strcat(processedBinary, "0");
-           }
-       }
-
-       char *byteData=processedBinary;
-       FILE *file3 = fopen(filename3, "a");
-       if (file3 == NULL) {
-        perror("无法打开输出文件");
-       }
-
-       fprintf(file3, "0x%02x 0x%02x", (unsigned char)root->ch, binaryLength);
-
-      int binaryLength2 = strlen(processedBinary);
-      for (int i = 0; i < binaryLength2; i += 8) {
-          char group[9];
-          strncpy(group, processedBinary + i, 8);
-          group[8] = '\0';
-          int decimal = 0;
-          for (int j = 0; j < 8; j++) {
-              if (group[j] == '1') {
-                  decimal += (int)pow(2, 7 - j);
-              }
-          }
-
-         
-          // 将文件大小信息写入文件
-          fprintf(file3, " 0x%02x", decimal);
-          // if(decimal !=)
-          // 关闭输出文件
-          
-      }
-      fprintf(file3, "\n");
-      fclose(file3);
- 
 }
 
 // 计算哈夫曼树的 WPL
@@ -756,7 +756,10 @@ void decode(const char *filename, const char *encodedFilename,  const char *file
     decodedText[decodedIndex] = '\0';
 
     // 输出解码后的文本
-    printf("解码后的文本: %s\n", decodedText);
+    
+    uint64_t hash1 = fnv1a_64(decodedText, strlen(decodedText));
+    printf("解码后的文本为: %s\n", decodedText);
+    printf("解码后的哈希值为: 0x%016llx\n", hash1);
 
     // 将解码后的文本写入文件
     char decodedFilename[100];
@@ -776,10 +779,53 @@ int main()
 {
   char *content;
   HuffmanNode *root;
-  char filePath1[] = ".\\test2\\yuanxi.txt";
-  char filePath2[] = ".\\result2\\yuanxi.hfm";
-  char filePath3[] = ".\\result2\\code.txt";
-  // char filePath[] = "yuanxi.txt";
+
+  // //测试一
+  // char filePath1[] = ".\\test1\\The_Wretched.txt";
+  // char filePath2[] = ".\\result1\\The_Wretched.hfm";
+  // char filePath3[] = ".\\result1\\code.txt";
+
+  // char filename4[] = ".\\result1\\code.txt";
+  // char filename5[] = ".\\result1\\The_Wretched_j.txt";
+  // char filename6[] = ".\\result1\\The_Wretched.hfm";
+
+  // // 测试二
+  // char filePath1[] = ".\\test2\\yuanxi.txt";
+  // char filePath2[] = ".\\result2\\yuanxi.hfm";
+  // char filePath3[] = ".\\result2\\code.txt";
+
+  // char filename4[] = ".\\result2\\code.txt";
+  // char filename5[] = ".\\result2\\yuanxi_j.txt";
+  // char filename6[] = ".\\result2\\yuanxi.hfm";
+
+  // //测试三
+  // char filePath1[] = ".\\test3\\middle.txt";
+  // char filePath2[] = ".\\result3\\middle.hfm";
+  // char filePath3[] = ".\\result3\\code.txt";
+
+  // char filename4[] = ".\\result3\\code.txt";
+  // char filename5[] = ".\\result3\\middle_j.txt";
+  // char filename6[] = ".\\result3\\middle.hfm";
+
+  //测试四
+  char filePath1[] = ".\\test4\\test.txt";
+  char filePath2[] = ".\\result4\\test.hfm";
+  char filePath3[] = ".\\result4\\code.txt";
+
+  char filename4[] = ".\\result4\\code.txt";
+  char filename5[] = ".\\result4\\test_j.txt";
+  char filename6[] = ".\\result4\\test.hfm";
+
+
+  // //样本文本
+  // char filePath1[] = ".\\test0\\test.txt";
+  // char filePath2[] = ".\\result0\\test.hfm";
+  // char filePath3[] = ".\\result0\\code.txt";
+
+  // char filename4[] = ".\\result0\\code.txt";
+  // char filename5[] = ".\\result0\\test_j.txt";
+  // char filename6[] = ".\\result0\\test.hfm";
+
   content = readFile(filePath1,filePath3);
   if (content != NULL)
   {
@@ -797,9 +843,7 @@ int main()
 
   printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
 
-  char filename4[] = ".\\result2\\code.txt";
-  char filename5[] = ".\\result2\\yuanxi_j.txt";
-  char filename6[] = ".\\result2\\yuanxi.hfm";
+
   decode(filename4, filename6, filename5);
 
 
