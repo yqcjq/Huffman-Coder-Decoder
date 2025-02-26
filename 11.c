@@ -734,42 +734,99 @@ void decode(const char *filename, const char *encodedFilename,  const char *file
     }
     fclose(file);
     printf("成功建树\n");
+
+    // // 将十六进制文件内容转换为二进制字符串
+    // char encodedBinary[100000];
+    // hexFileToBinary(encodedFilename, encodedBinary);
+
+    // // 解码过程
+    // char decodedText[100000];
+    // int decodedIndex = 0;
+    // HuffmanNode *current = root;
+    // for (int i = 0; encodedBinary[i] != '\0'; i++) {
+    //     if (encodedBinary[i] == '0') {
+    //         current = current->left;
+    //     } else {
+    //         current = current->right;
+    //     }
+    //     if (current->ch != '\0') {
+    //         decodedText[decodedIndex++] = current->ch;
+    //         current = root;
+    //     }
+    // }
+    // decodedText[decodedIndex] = '\0';
+
+    // // 输出解码后的文本
+    
+    // uint64_t hash1 = fnv1a_64(decodedText, strlen(decodedText));
+    // printf("解码后的文本为: %s\n", decodedText);
+    // printf("解码后的哈希值为: 0x%016llx\n", hash1);
+
+    // // 将解码后的文本写入文件
+    // char decodedFilename[100];
+
+    // FILE *decodedFile = fopen(filename2, "w");
+    // if (decodedFile == NULL) {
+    //     perror("无法打开输出文件");
+    //     return;
+    // }
+    // fputs(decodedText, decodedFile);
+    // fclose(decodedFile);
+
+    
     // 将十六进制文件内容转换为二进制字符串
     char encodedBinary[100000];
     hexFileToBinary(encodedFilename, encodedBinary);
 
-    // 解码过程
-    char decodedText[100000];
-    int decodedIndex = 0;
-    HuffmanNode *current = root;
-    for (int i = 0; encodedBinary[i] != '\0'; i++) {
-        if (encodedBinary[i] == '0') {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
-        if (current->ch != '\0') {
-            decodedText[decodedIndex++] = current->ch;
-            current = root;
-        }
-    }
-    decodedText[decodedIndex] = '\0';
-
-    // 输出解码后的文本
-    
-    uint64_t hash1 = fnv1a_64(decodedText, strlen(decodedText));
-    printf("解码后的文本为: %s\n", decodedText);
-    printf("解码后的哈希值为: 0x%016llx\n", hash1);
-
-    // 将解码后的文本写入文件
-    char decodedFilename[100];
-
+    // 打开输出文件
     FILE *decodedFile = fopen(filename2, "w");
     if (decodedFile == NULL) {
         perror("无法打开输出文件");
         return;
     }
-    fputs(decodedText, decodedFile);
+
+    int decodedBytes = 0;
+    int startIndex = 0;
+    HuffmanNode *current = root;
+    char decodedText[505];  // 用于存储每次解码的结果
+
+    int i;
+    while (decodedBytes < totalBytes) {
+        int blockDecodedBytes = 0;
+        int decodedIndex = 0;
+        for ( i = startIndex; encodedBinary[i] != '\0'; i++) {
+            
+            if (encodedBinary[i] == '0') {
+                current = current->left;
+            } else {
+                current = current->right;
+            }
+            if (current->ch != '\0') {
+                decodedText[decodedIndex++] = current->ch;
+                blockDecodedBytes++;
+                decodedBytes++;
+                current = root;
+                if (blockDecodedBytes >= 500 || decodedBytes >= totalBytes) {
+                    break;
+                }
+            }
+        }
+
+        // 处理跨块未完成的编码
+        if (current != root) {
+            // 这里可以添加更复杂的处理逻辑，暂时简单提示
+            printf("警告：存在跨块未完成的编码，可能需要更复杂处理\n");
+            // 可以考虑记录状态，结合下一块继续解码
+        }
+
+        decodedText[decodedIndex] = '\0';
+        // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
+        // 将解码结果写入文件
+        fputs(decodedText, decodedFile);
+        // startIndex += i - startIndex;
+        startIndex = i+1;
+    }
+
     fclose(decodedFile);
 
 }
@@ -798,23 +855,23 @@ int main()
   // char filename5[] = ".\\result2\\yuanxi_j.txt";
   // char filename6[] = ".\\result2\\yuanxi.hfm";
 
-  // //测试三
-  // char filePath1[] = ".\\test3\\middle.txt";
-  // char filePath2[] = ".\\result3\\middle.hfm";
-  // char filePath3[] = ".\\result3\\code.txt";
+  //测试三
+  char filePath1[] = ".\\test3\\middle.txt";
+  char filePath2[] = ".\\result3\\middle.hfm";
+  char filePath3[] = ".\\result3\\code.txt";
 
-  // char filename4[] = ".\\result3\\code.txt";
-  // char filename5[] = ".\\result3\\middle_j.txt";
-  // char filename6[] = ".\\result3\\middle.hfm";
+  char filename4[] = ".\\result3\\code.txt";
+  char filename5[] = ".\\result3\\middle_j.txt";
+  char filename6[] = ".\\result3\\middle.hfm";
 
-  //测试四
-  char filePath1[] = ".\\test4\\test.txt";
-  char filePath2[] = ".\\result4\\test.hfm";
-  char filePath3[] = ".\\result4\\code.txt";
+  // //测试四
+  // char filePath1[] = ".\\test4\\test.txt";
+  // char filePath2[] = ".\\result4\\test.hfm";
+  // char filePath3[] = ".\\result4\\code.txt";
 
-  char filename4[] = ".\\result4\\code.txt";
-  char filename5[] = ".\\result4\\test_j.txt";
-  char filename6[] = ".\\result4\\test.hfm";
+  // char filename4[] = ".\\result4\\code.txt";
+  // char filename5[] = ".\\result4\\test_j.txt";
+  // char filename6[] = ".\\result4\\test.hfm";
 
 
   // //样本文本
@@ -845,8 +902,10 @@ int main()
 
 
   decode(filename4, filename6, filename5);
-
-
+  // char *content2;
+  // content2 = readFile(filename5, filePath3);
+  // uint64_t hash_value2 = fnv1a_64(content2, strlen(content2) ); 
+  // printf("解压后字符串 \"%s\" 的哈希值为: 0x%016llx\n", content2, hash_value2);
  
   return 0;
 }
