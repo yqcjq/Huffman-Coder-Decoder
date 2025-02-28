@@ -15,6 +15,7 @@
 #define FNV1A_64_INIT 0xcbf29ce484222325ULL
 // FNV-1a 64位哈希算法的质数
 #define FNV1A_64_PRIME 0x100000001b3
+#define BUFFER_SIZE 500
 
  
 uint64_t fnv1a_64(const void *data, size_t length) 
@@ -61,7 +62,49 @@ void swap1(HuffmanNode **a, HuffmanNode **b)
 }
 
 //读取文件信息
-char *readFile(char *filePath,char *filePath3)
+char *readFile(char *filePath)
+{
+  FILE *file;
+  char *fileContent;
+  int fileSize;
+  // 打开文件，以只读模式打开
+  file = fopen(filePath, "rb");
+  if (file == NULL)
+  {
+    perror("无法打开文件");
+    return NULL;
+  }
+  // 将文件指针移动到文件末尾
+  fseek(file, 0, SEEK_END);
+  // 获取文件大小
+  fileSize = ftell(file);
+  // 将文件指针移回文件开头
+  fseek(file, 0, SEEK_SET);
+  printf("文件大小为: %d 字节\n", fileSize);
+
+
+  // 动态分配内存
+  fileContent = (char *)malloc((fileSize + 1) * sizeof(char));
+  if (fileContent == NULL)
+  {
+    perror("内存分配失败");
+    fclose(file);
+    return NULL;
+  }
+
+  // 读取文件内容
+  fread(fileContent, sizeof(char), fileSize, file);
+  // 确保字符串以 '\0' 结尾
+  fileContent[fileSize] = '\0';
+
+  // 关闭文件
+  fclose(file);
+
+  return fileContent;
+}
+
+//读取文件信息
+char *readFileAndWriteSize(char *filePath,char *filePath3)
 {
   FILE *file;
   char *fileContent;
@@ -378,7 +421,7 @@ void saveHuffmanCodes(HuffmanNode *root, char huffmanCodes[256][100] , const cha
    }
 
    char *byteData=processedBinary;
-   FILE *file3 = fopen(filename3, "a");
+   FILE *file3 = fopen(filename3, "ab");
    if (file3 == NULL) {
     perror("无法打开输出文件");
    }
@@ -445,20 +488,111 @@ int calculateWPL(HuffmanNode *root, int depth)
 }
 
 
+// // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
+// void encodeText(const char *filename, char huffmanCodes[256][100], char *content, const char *filename2)
+// {
+//   printf("正在进行哈夫曼编码\n ");
+//   char binary[1000000] = "";  // 假设编码后的二进制字符串长度不超过 1000000
+//   printf("压缩后的二进制文本为:\n ");
+//   for (int i = 0; content[i] != '\0'; i++)
+//   {
+//     strcat(binary, huffmanCodes[(unsigned char)content[i]]);
+//     printf("%s", huffmanCodes[(unsigned char)content[i]]);
+//   }
+//   printf("\n");
+
+//   printf("已经压缩成二进制文本了\n ");
+//  // 计算需要补零的位数
+//  int binaryLength = strlen(binary);
+//  int padding = 8 - (binaryLength % 8);
+//  if (padding < 8) {
+//      for (int i = 0; i < padding; i++) {
+//          strcat(binary, "0");
+//      }
+//  }
+
+ 
+ 
+//   // 将二进制字符串转换为十六进制字符串
+//   unsigned char byteData[125000];  // 二进制转十六进制长度除以四
+//   binaryToByteData(binary, byteData);
+//   printf("补零后的二进制文本为:  %s\n",binary);
+//   int len = strlen(binary) / 8;
+//   printf("压缩后的bit位编码为: \n");
+//   for (int i = 0,  j = 0; i < len; i++,j++) {
+//     if(j == 16) {
+//       printf("\n");
+//       j = 0;
+//     }
+//       printf("%02x", byteData[i]);
+//   }
+//   printf("\n");
+//   printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
+
+//   //把编码写入文本文件
+
+//   writeFile(filename2, byteData, sizeof(char), len);
+
+//   // 计算 FNV-1a 64位哈希值
+//   uint64_t hash1 = fnv1a_64(binary, strlen(binary));
+//   uint64_t hash2 = fnv1a_64(byteData, strlen(byteData));
+//   printf("压缩后文本二进制的HASH1值为: 0x%016llx\n", hash1);
+//   printf("压缩后文本bit位编码的HASH2值为: 0x%016llx\n", hash2);
+// }
+
+
 // 对文本进行哈夫曼编码，补零后，输出压缩后的二进制、十六进制、哈希值
 void encodeText(const char *filename, char huffmanCodes[256][100], char *content, const char *filename2)
 {
-  printf("正在进行哈夫曼编码\n ");
-  char binary[1000000] = "";  // 假设编码后的二进制字符串长度不超过 1000000
-  printf("压缩后的二进制文本为:\n ");
+
+    FILE *outputFile1 = fopen(filename2, "wb");
+    fclose(outputFile1);
+    FILE *outputFile = fopen(filename2, "ab");
+    if (outputFile == NULL) {
+        perror("无法打开输出文件");
+        return;
+    }
+
+  char binary[1000] = "";  // 假设编码后的二进制字符串长度不超过 100
+  int totalBytesWritten = 0;
+  // printf("压缩后的二进制文本为:\n ");
   for (int i = 0; content[i] != '\0'; i++)
   {
     strcat(binary, huffmanCodes[(unsigned char)content[i]]);
-    printf("%s", huffmanCodes[(unsigned char)content[i]]);
+    // printf("%s", huffmanCodes[(unsigned char)content[i]]);
+    if(strlen(binary)>=800) {
+      int temp = strlen(binary) % 8;
+      if (temp == 0) {
+        unsigned char byteData[250];
+        binaryToByteData(binary, byteData);
+        int len = strlen(binary) / 8;
+        // printf("十六进制代码\n%s\n ",byteData);
+        // 写入十六进制数据到文件
+        size_t bytesWritten = fwrite(byteData, sizeof(char), len, outputFile);
+        totalBytesWritten += bytesWritten;
+        binary[0] = '\0';
+      } else {
+        // 如果二进制字符串长度不是 8 的倍数，截取前面是 8 的倍数的部分进行处理
+        int validLength = strlen(binary) - temp;
+        char validBinary[1000];
+        strncpy(validBinary, binary, validLength);
+        validBinary[validLength] = '\0';
+        unsigned char byteData[250];
+        binaryToByteData(validBinary, byteData);
+        // printf("十六进制代码\n%s\n ",byteData);
+        // 写入十六进制数据到文件
+        int len = validLength / 8;
+        size_t bytesWritten = fwrite(byteData, sizeof(char), len, outputFile);
+        totalBytesWritten += bytesWritten;
+        strcpy(binary, binary + validLength);
+        validBinary[0] = '\0';
+      }
+    }
   }
   printf("\n");
 
   printf("已经压缩成二进制文本了\n ");
+  printf("补零前%s\n ",binary);
  // 计算需要补零的位数
  int binaryLength = strlen(binary);
  int padding = 8 - (binaryLength % 8);
@@ -468,35 +602,31 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
      }
  }
 
- 
+ printf("补零后%s\n ",binary);
  
   // 将二进制字符串转换为十六进制字符串
-  unsigned char byteData[125000];  // 二进制转十六进制长度除以四
+  unsigned char byteData[250];  // 二进制转十六进制长度除以四
   binaryToByteData(binary, byteData);
-  printf("补零后的二进制文本为:  %s\n",binary);
+  printf("十六进制代码\n%02x\n ",byteData);
+  // printf("补零后的二进制文本为:  %s\n",binary);
   int len = strlen(binary) / 8;
   printf("压缩后的bit位编码为: \n");
-  for (int i = 0,  j = 0; i < len; i++,j++) {
-    if(j == 16) {
-      printf("\n");
-      j = 0;
-    }
-      printf("%02x", byteData[i]);
-  }
+
   printf("\n");
   printf("压缩后的bit位编码第一位为: %x\n", byteData[0]);
 
   //把编码写入文本文件
 
-  writeFile(filename2, byteData, sizeof(char), len);
+  size_t bytesWritten = fwrite(byteData, sizeof(char), len, outputFile);
+  totalBytesWritten += bytesWritten;
 
   // 计算 FNV-1a 64位哈希值
   uint64_t hash1 = fnv1a_64(binary, strlen(binary));
-  uint64_t hash2 = fnv1a_64(byteData, strlen(byteData));
+  // uint64_t hash2 = fnv1a_64(byteData, strlen(byteData));
   printf("压缩后文本二进制的HASH1值为: 0x%016llx\n", hash1);
-  printf("压缩后文本bit位编码的HASH2值为: 0x%016llx\n", hash2);
+  // printf("压缩后文本bit位编码的HASH2值为: 0x%016llx\n", hash2);
+  fclose(outputFile);
 }
-
 
 // 压缩前，对文本进行位编码，输出编码后的十六进制值，并计算文本的哈希值
 void bitEncodeAndHash(const char *content)
@@ -642,9 +772,9 @@ int hexCharToInt(char hexChar) {
 }
 
 // 将十六进制字符串转换为二进制字符串
-void hexToBinary(const char *hex, char *binary, int bitCount) {
-    int hexIndex = 0;
+void hexToBinary(const  char  *hex,unsigned char *binary, int bitCount) {
     int binIndex = 0;
+    int hexIndex = 0;
     while (bitCount > 0) {
         int hexVal = hexCharToInt(hex[hexIndex]);
         for (int i = 3; i >= 0 && bitCount > 0; i--) {
@@ -654,6 +784,17 @@ void hexToBinary(const char *hex, char *binary, int bitCount) {
         hexIndex++;
     }
     binary[binIndex] = '\0';
+}
+
+void hexToBit(const unsigned char *hex, char *binary, int byteCount) {
+  int binIndex = 0;
+  for (int i = 0; i < byteCount; i++) {
+      unsigned char byte = hex[i];
+      for (int j = 7; j >= 0; j--) {
+          binary[binIndex++] = (byte & (1 << j)) ? '1' : '0';
+      }
+  }
+  binary[binIndex] = '\0';
 }
 
 // 将十六进制文件内容转换为二进制字符串
@@ -695,7 +836,7 @@ void decodebuildHuffmanTree(HuffmanNode *root, char *code, char ch) {
 }
 
 // 解码函数
-void decode(const char *filename, const char *encodedFilename,  const char *filename2) {
+void decode(char *filename, char *encodedFilename,  char *filename2) {
     FILE *file = fopen(filename, "rb");
     if (file == NULL) {
         perror("无法打开文件1");
@@ -778,62 +919,288 @@ void decode(const char *filename, const char *encodedFilename,  const char *file
     // fputs(decodedText, decodedFile);
     // fclose(decodedFile);
 
-    
-    // 将十六进制文件内容转换为二进制字符串
-    char encodedBinary[1000000];
-    hexFileToBinary(encodedFilename, encodedBinary);
 
-    // 打开输出文件
-    FILE *decodedFile = fopen(filename2, "wb");
+
+
+
+
+
+
+    // FILE *outputFile1 = fopen(filename2, "wb");
+    // fclose(outputFile1);
+
+    // FILE *decodedFile = fopen(filename2, "ab");
+    // if (decodedFile == NULL) {
+    //     perror("无法打开输出文件");
+    //     return;
+    // }
+
+    // unsigned char *content;
+    // content = readFile(encodedFilename);
+    // unsigned char byteData[1000] = "";
+    // int len = 0;
+    // unsigned char binary[8000] = "";
+
+    // int decodedBytes = 0;
+    
+    // HuffmanNode *current = root;
+    // unsigned char decodedText[2000];  // 用于存储每次解码的结果
+    // printf("马上进入循环啦！\n");
+    
+    // int j = 0;
+    // printf("totalBytes是%d\n", totalBytes);
+    // while (decodedBytes < totalBytes) {
+    //   // printf("进入while循环啦！\n");
+    //   for (int i = 0; content[j] != '\0'; j ++) {
+    //     // printf("进入for循环啦！\n");
+    //     byteData[len++] = content[j];
+    //     // printf("content[%d]是：%02x\n", j, content[j]);
+    //     // printf("byteData[%d]是：%02x\n", len, byteData[len]);
+    //     byteData[len + 1] = '\0'; 
+    //     // int startIndex = 0;
+    //     i = 0;
+    //     if(len >= 200) {
+    //         printf("字符达到200啦！\n");
+            
+    //         // 将十六进制文件内容转换为二进制字符串
+    //         hexToBit(byteData, binary, len);
+    //         // printf("十六进制是%s\n", byteData);
+    //         // printf("二进制是%s\n", binary);
+    //         //接下来开始解码
+        
+    //         // int blockDecodedBytes = 0;
+    //         int decodedIndex = 0;
+           
+    //         for ( i = 0; binary[i] != '\0'; i++) {
+             
+    //             if (binary[i] == '0') {
+    //                 current = current->left;
+    //             } else {
+    //                 current = current->right;
+    //             }
+    //             if (current->ch != '\0') {
+                  
+    //                 decodedText[decodedIndex++] = current->ch;
+    //                 if(i == 1) {
+    //                   printf("现在进入字符达到200内部的二叉树，找到叶子啦！\n");
+    //                   printf("第一个输出的字符是%c\n", current->ch);
+    //                 }
+    //                 // printf("字符为%c\n",current->ch);
+    //                 // blockDecodedBytes++;
+    //                 decodedBytes++;
+    //                 current = root;
+    //                 if (decodedBytes >= totalBytes) {
+    //                     break;
+    //                 }
+    //             }
+    //         }  
+    
+    //         // 处理跨块未完成的编码
+    //         if (current != root) {
+    //           // 这里可以添加更复杂的处理逻辑，暂时简单提示
+    //           printf("警告：存在跨块未完成的编码，可能需要更复杂处理\n");
+    //           // strcpy(binary, binary + i);
+    //           // memset(byteData, 0, sizeof(byteData));
+    //           // HuffmanNode *current = root;
+    //           // 可以考虑记录状态，结合下一块继续解码
+
+    //         //   decodedText[decodedIndex] = '\0';
+    //         // // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
+    //         // // 将解码结果写入文件
+    //         // // fputs(decodedText, decodedFile);
+    //         // size_t bytesWritten = fwrite(decodedText, sizeof(char), strlen(decodedText), decodedFile);
+    //         // printf("写入文件的内容是：%s\n", decodedText);
+
+    //         // memset(decodedText, 0, sizeof(decodedText));
+    //         // memset(byteData, 0, sizeof(byteData));
+    //         // memset(binary, 0, sizeof(binary));
+    //           continue;
+    //         }
+            
+    //         decodedText[decodedIndex] = '\0';
+    //         // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
+    //         // 将解码结果写入文件
+    //         // fputs(decodedText, decodedFile);
+    //         size_t bytesWritten = fwrite(decodedText, sizeof(char), strlen(decodedText), decodedFile);
+    //         printf("写入文件的内容是：%s\n", decodedText);
+
+            
+    //         // memset(decodedText, 0, sizeof(decodedText));
+    //         memset(byteData, 0, sizeof(byteData));
+    //         memset(binary, 0, sizeof(binary));
+    //         len = 0;
+    //         // startIndex = i + 1; 
+           
+        
+    //     }
+    //   }
+    // //   for (int i = 0; i < 20; i++) {
+    // //     printf("字符 %c 的十六进制ASCII码值是: 0x%02x\n", byteData[i], (unsigned char)byteData[i]);
+    // // }
+    // //   printf("十六进制是%llx\n", byteData);
+
+    // // for (int i = 0; i < 20; i++) {
+    // //     printf("字符 %c 的十六进制ASCII码值是: 0x%02x\n", byteData[i], (unsigned char)byteData[i]);
+    // // }
+    //   //检测最后的文本
+    //   // printf("strlen(byteData)是%d\n", strlen(byteData));
+    //   if(content[j] == '\0') {
+    //     hexToBit(byteData, binary, strlen(byteData));
+    //     // printf("二进制是%s\n", binary);
+    //     int decodedIndex = 0;
+    //     // HuffmanNode *current = root;
+    //     for (int i = 0; binary[i] != '\0'; i++) {
+                  
+    //       if (binary[i] == '0') {
+    //           current = current->left;
+    //       } else {
+    //           current = current->right;
+    //       }
+    //       if (current->ch != '\0') {
+    //           decodedText[decodedIndex++] = current->ch;
+    //           if(i == 1) {
+    //             printf("第一个输出的字符是%c\n", current->ch);
+    //           }
+    //           decodedBytes++;
+    //           printf("decodedBytes是%d\n", decodedBytes);
+    //           current = root;
+    //           if ( decodedBytes >= totalBytes) {
+    //               break;
+    //           }
+    //       }
+    //     }  
+    //     decodedText[decodedIndex] = '\0';
+    //     // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
+    //     // 将解码结果写入文件
+    //     // fputs(decodedText, decodedFile);
+    //     size_t bytesWritten = fwrite(decodedText, sizeof(char), strlen(decodedText), decodedFile);
+    //     // printf("写入文件的内容是：%s\n", decodedText);
+
+    //     // memset(decodedText, 0, sizeof(decodedText));
+    //     memset(byteData, 0, sizeof(byteData));
+    //     memset(binary, 0, sizeof(binary));
+    //     // printf("decodedBytes是：%d\n",decodedBytes);
+    //   }
+
+    // }
+
+   
+    
+
+    // // 打开输出文件
+    
+
+    
+   
+    
+
+    // fclose(decodedFile);
+    // free(content);
+
+
+
+
+
+
+
+
+
+    
+    
+    FILE *file2 = fopen(encodedFilename, "rb");
+    if (encodedFilename == NULL) {
+      perror("无法打开输出文件");
+      return;
+    }
+
+    FILE *file3 = fopen(filename2, "wb");
+    if (filename2 == NULL) {
+      perror("无法打开输出文件");
+      return;
+    }
+    fclose(file3);
+    FILE *decodedFile = fopen(filename2, "a");
     if (decodedFile == NULL) {
         perror("无法打开输出文件");
         return;
     }
 
+    // unsigned char content[501];
+    // content = readFile(encodedFilename);
+    unsigned char byteData[BUFFER_SIZE] = "";
+    unsigned char binary[BUFFER_SIZE * 8 + 1] = "";
+    char remainingBinary[BUFFER_SIZE * 9 + 1] = "";  // 存储跨块未完成的二进制数据
+    int remainingLen = 0;
     int decodedBytes = 0;
-    int startIndex = 0;
-    HuffmanNode *current = root;
-    char decodedText[505];  // 用于存储每次解码的结果
+    size_t bytesRead;
+    // int decodedBytes = 0;
+    
+    printf("马上进入循环啦！\n");
+    
+    int j = 0;
+    printf("totalBytes是%d\n", totalBytes);
 
-    int i;
-    while (decodedBytes < totalBytes) {
-        int blockDecodedBytes = 0;
+      while ((bytesRead = fread(byteData, 1, BUFFER_SIZE, file2)) > 0)
+      {
+        // printf("进入循环了");
+        hexToBit(byteData, binary, bytesRead);
+        strcat( remainingBinary,binary);
+        HuffmanNode *current = root;
+        // printf("byteData的内容是%s", byteData);
+        // printf("进入for循环啦！\n");
+
         int decodedIndex = 0;
-        for ( i = startIndex; encodedBinary[i] != '\0'; i++) {
-            
-            if (encodedBinary[i] == '0') {
+        int lastValidPos = 0;
+        for (int i = 0; remainingBinary[i] != '\0' && decodedBytes < totalBytes; i++) {
+         
+            if (remainingBinary[i] == '0') {
                 current = current->left;
             } else {
                 current = current->right;
             }
             if (current->ch != '\0') {
-                decodedText[decodedIndex++] = current->ch;
-                blockDecodedBytes++;
-                decodedBytes++;
+              
+              fputc(current->ch, decodedFile);
                 current = root;
-                if (blockDecodedBytes >= 500 || decodedBytes >= totalBytes) {
-                    break;
+                decodedBytes++;
+                lastValidPos = i + 1;
+                if ( decodedBytes >= totalBytes) {
+                  break;
                 }
             }
+        }  
+
+         // 处理跨块未完成的编码
+         remainingLen = strlen(remainingBinary) - lastValidPos;
+         strcpy(remainingBinary, remainingBinary + lastValidPos);
+
+        
+      }
+    // }
+       
+    // 处理最后可能的未完成编码
+      printf("现在开始处理最后一段二进制\n");
+      HuffmanNode *current = root;
+      for (int i = 0; remainingBinary[i] != '\0' && decodedBytes < totalBytes; i++)
+      {
+        if (remainingBinary[i] == '0') {
+            current = current->left;
+        } else {
+            current = current->right;
         }
 
-        // 处理跨块未完成的编码
-        if (current != root) {
-            // 这里可以添加更复杂的处理逻辑，暂时简单提示
-            printf("警告：存在跨块未完成的编码，可能需要更复杂处理\n");
-            // 可以考虑记录状态，结合下一块继续解码
+        if (current->ch != '\0') {
+            fputc(current->ch, decodedFile);
+            current = root;
+            decodedBytes++;
+            if ( decodedBytes >= totalBytes) {
+              break;
+            }
         }
-
-        decodedText[decodedIndex] = '\0';
-        // printf("此时写入文件，最后二个单词的%c,最后一个单词的%c\n",decodedText[decodedIndex-2],decodedText[decodedIndex-1]);
-        // 将解码结果写入文件
-        fputs(decodedText, decodedFile);
-        // startIndex += i - startIndex;
-        startIndex = i+1;
     }
-
+    fclose(file);
     fclose(decodedFile);
-
+  
 }
 
 
@@ -894,17 +1261,17 @@ int main()
   // char filename5[] = ".\\result0\\test_j.txt";
   // char filename6[] = ".\\result0\\test.hfm";
 
-  content = readFile(filePath1,filePath3);
+  content = readFileAndWriteSize(filePath1,filePath3);
   if (content != NULL)
   {
-    printf("文件内容如下：\n%s\n", content);
+    // printf("文件内容如下：\n%s\n", content);
   }
 
   root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
   // bitEncodeAndHash(content);
   uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
-  printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
-  // printf("原字符串的哈希值为: 0x%016llx\n",  hash_value);
+  // printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
+  printf("原字符串的哈希值为: 0x%016llx\n",  hash_value);
 
   // 释放动态分配的内存
   freeHuffmanTree(root);
@@ -915,7 +1282,7 @@ int main()
 
   decode(filename4, filename6, filename5);
   // char *content2;
-  // content2 = readFile(filename5, filePath3);
+  // content2 = readFile(filename5);
   // uint64_t hash_value2 = fnv1a_64(content2, strlen(content2) ); 
   // printf("解压后字符串 \"%s\" 的哈希值为: 0x%016llx\n", content2, hash_value2);
  
