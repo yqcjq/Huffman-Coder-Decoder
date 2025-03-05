@@ -1476,219 +1476,219 @@ void decode(char *filename, char *encodedFilename,  char *filename2) {
 }
 
 
-// int main()
-// {
-//   clock_t start, end;
-//     double cpu_time_used;
-
-//     // 记录开始时间
-//     start = clock();
-
-//   char *content;
-//   HuffmanNode *root;
-
-//   //测试一
-//   char filePath1[] = ".\\test1\\The_Wretched.txt";
-//   char filePath2[] = ".\\result1\\The_Wretched.hfm";
-//   char filePath3[] = ".\\result1\\code.txt";
-
-//   char filename4[] = ".\\result1\\code.txt";
-//   char filename5[] = ".\\result1\\The_Wretched_j.txt";
-//   char filename6[] = ".\\result1\\The_Wretched.hfm";
-
-//   // // 测试二
-//   // char filePath1[] = ".\\test2\\yuanxi.txt";
-//   // char filePath2[] = ".\\result2\\yuanxi.hfm";
-//   // char filePath3[] = ".\\result2\\code.txt";
-
-//   // char filename4[] = ".\\result2\\code.txt";
-//   // char filename5[] = ".\\result2\\yuanxi_j.txt";
-//   // char filename6[] = ".\\result2\\yuanxi.hfm";
-
-//   // //测试三
-//   // char filePath1[] = ".\\test3\\middle.txt";
-//   // char filePath2[] = ".\\result3\\middle.hfm";
-//   // char filePath3[] = ".\\result3\\code.txt";
-
-//   // char filename4[] = ".\\result3\\code.txt";
-//   // char filename5[] = ".\\result3\\middle_j.txt";
-//   // char filename6[] = ".\\result3\\middle.hfm";
-
-//   // //测试四
-//   // char filePath1[] = ".\\test4\\test.txt";
-//   // char filePath2[] = ".\\result4\\test.hfm";
-//   // char filePath3[] = ".\\result4\\code.txt";
-
-//   // char filename4[] = ".\\result4\\code.txt";
-//   // char filename5[] = ".\\result4\\test_j.txt";
-//   // char filename6[] = ".\\result4\\test.hfm";
-
-
-//   // //样本文本
-//   // char filePath1[] = ".\\test0\\test.txt";
-//   // char filePath2[] = ".\\result0\\test.hfm";
-//   // char filePath3[] = ".\\result0\\code.txt";
-
-//   // char filename4[] = ".\\result0\\code.txt";
-//   // char filename5[] = ".\\result0\\test_j.txt";
-//   // char filename6[] = ".\\result0\\test.hfm";
-
-//   // // //测试接收人
-//   // char filePath1[] = "yuanxi.txt";
-//   // char filePath2[] = "yuanxi.hfm";
-//   // char filePath3[] = "code.txt";
-
-//   // char filename4[] = "code.txt";
-//   // char filename5[] = "yuanxi_j.txt";
-//   // char filename6[] = "yuanxi.hfm";
-
-//   content = readFileAndWriteSize(filePath1,filePath3);
-//   if (content != NULL)
-//   {
-//     // printf("文件内容如下：\n%s\n", content);
-//   }
-
-
-//   content = readFileAndWriteSize(filePath1, filePath3);
-//   // printf("文件内容如下：\n%s\n", content);
-//   // printf("文件长度为：\n%d\n", strlen(content));
-
-//   // printf("文件内容如下：\n%s\n", content);
-//   printf("文件长度为：\n%d\n", strlen(content));
-//   root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
-//   // bitEncodeAndHash(content);
-//   // uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
-//   // printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
-//   // printf("原字符串的哈希值为: 0x%016llx\n",  hash_value);
-
-//   // 释放动态分配的内存
-
-//    // 凯撒解密
-//    for (int i = 0; content[i] != '\0'; i++) {
-//     content[i] = (unsigned char)(content[i] - 0x55) % 256;
-// }
-
-//   freeHuffmanTree(root);
-//   free(content);   
-
-//   printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
-
-
-//   decode(filename4, filename6, filename5);
-//   // 记录结束时间
-//   end = clock();
-
-//   // 计算使用的 CPU 时间（秒）
-//   cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-
-//   printf("程序运行时间: %f 秒\n", cpu_time_used);
-
-//   uint64_t hash1 = calculateFileHash(filePath1);
-//   printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
-//   uint64_t hash2 = calculateFileHash(filePath2);
-//   printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath2, hash2);
-//   uint64_t hash3 = calculateFileHash(filename5);
-//   printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filename5, hash3);
-//   printLastSixteenBytes(filePath2);
-//   printFileSizePercentage(filePath2, filePath1);
-//   long size1 = getFileSize(filePath1);
-//   printf("文件 %s 的 文件大小为: %d\n", filePath1, size1);
-//   long size2 = getFileSize(filename6);
-//   printf("文件 %s 的 文件大小为: %d\n", filename6, size2);
-//   long size3 = getFileSize(filename5);
-//   printf("文件 %s 的 文件大小为: %d\n", filename5, size3);
-//   return 0;
-// }
-
-int main() {
-  // clearInputBuffer();
-   
-while(1){
-  int filePathChoice;
-  printf("请输入需要测试的数据文本集序号：");
-  scanf("%d", &filePathChoice);
-  while (getchar() != '\n');
-//   if (scanf("%d", &filePathChoice) != 1) {
-//     // 清除输入缓冲区中的无效字符
-//     clearInputBuffer();
-//     printf("输入无效，请输入一个整数。\n");
-//     continue;
-// }
-
-  if (filePathChoice == 1) {
-    //测试一
-    char filePath1[] = ".\\test1\\The_Wretched.txt";
-    char filePath2[] = ".\\result1\\The_Wretched.hfm";
-    char filePath3[] = ".\\result1\\code.txt";
-
-    char filename4[] = ".\\result1\\code.txt";
-    char filename5[] = ".\\result1\\The_Wretched_j.txt";
-    char filename6[] = ".\\result1\\The_Wretched.hfm";
-
-    char recipientId[9];
-    char recipientName[7];
-    char senderId[9];
-    char senderName[7];
-
-    // printf("请设置发送人的学号：");
-    // scanf("%9s", senderId);
-    // while (getchar() != '\n');
-    // printf("请设置发送人的姓名：");
-    // scanf("%s", senderName);
-    // while (getchar() != '\n');
-    // printf("请设置接收人人的学号：");
-    // scanf("%9s", recipientId);
-    // while (getchar() != '\n');
-    // printf("请设置接收人人的姓名：");
-    // scanf("%s", recipientName);
-    // while (getchar() != '\n');
-    // if(senderId != NULL && senderName != NULL && recipientId != NULL && recipientName != NULL) {
-    //   insertInfoToFile(filePath1, recipientId, recipientName, senderId, senderName);
-    // }
-
-    printf("是否需要对原文本进行偏移量为0x55的凯撒加密（y/n）？：");
-    char answer;
-    scanf("%c", &answer);
-    // scanf("%c", answer);
-
-    if ( answer == 'y') {
-      addOffsetToFile(filePath1, 0);
-    }
-
-
-    char *content;
-    HuffmanNode *root;
-    content = readFileAndWriteSize(filePath1,filePath3);
-    clock_t start, end;
+int main()
+{
+  clock_t start, end;
     double cpu_time_used;
-    // 记录开始时间1
-    start = clock();
-    root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
-    //记录结束时间
-    end = clock();
-    // 计算使用的 CPU 时间（秒）
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    if ( answer == 'y') {
-      addOffsetToFile(filePath1, 0);
-    }
-    freeHuffmanTree(root);
-    free(content);
-    printLastSixteenBytes(filePath2);
-    printf("程序运行时间: %f 秒\n", cpu_time_used);
-    uint64_t hash1 = calculateFileHash(filePath1);
-    printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
-    uint64_t hash2 = calculateFileHash(filePath2);
-    printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath2, hash2);
-    printFileSizePercentage(filePath2, filePath1);
 
-    printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
-    break;
+    // 记录开始时间
+    start = clock();
+
+  char *content;
+  HuffmanNode *root;
+
+  // //测试一
+  // char filePath1[] = ".\\test1\\The_Wretched.txt";
+  // char filePath2[] = ".\\result1\\The_Wretched.hfm";
+  // char filePath3[] = ".\\result1\\code.txt";
+
+  // char filename4[] = ".\\result1\\code.txt";
+  // char filename5[] = ".\\result1\\The_Wretched_j.txt";
+  // char filename6[] = ".\\result1\\The_Wretched.hfm";
+
+  // // 测试二
+  // char filePath1[] = ".\\test2\\yuanxi.txt";
+  // char filePath2[] = ".\\result2\\yuanxi.hfm";
+  // char filePath3[] = ".\\result2\\code.txt";
+
+  // char filename4[] = ".\\result2\\code.txt";
+  // char filename5[] = ".\\result2\\yuanxi_j.txt";
+  // char filename6[] = ".\\result2\\yuanxi.hfm";
+
+  // //测试三
+  // char filePath1[] = ".\\test3\\middle.txt";
+  // char filePath2[] = ".\\result3\\middle.hfm";
+  // char filePath3[] = ".\\result3\\code.txt";
+
+  // char filename4[] = ".\\result3\\code.txt";
+  // char filename5[] = ".\\result3\\middle_j.txt";
+  // char filename6[] = ".\\result3\\middle.hfm";
+
+  //测试四
+  char filePath1[] = ".\\test4\\test.txt";
+  char filePath2[] = ".\\result4\\test.hfm";
+  char filePath3[] = ".\\result4\\code.txt";
+
+  char filename4[] = ".\\result4\\code.txt";
+  char filename5[] = ".\\result4\\test_j.txt";
+  char filename6[] = ".\\result4\\test.hfm";
+
+
+  // //样本文本
+  // char filePath1[] = ".\\test0\\test.txt";
+  // char filePath2[] = ".\\result0\\test.hfm";
+  // char filePath3[] = ".\\result0\\code.txt";
+
+  // char filename4[] = ".\\result0\\code.txt";
+  // char filename5[] = ".\\result0\\test_j.txt";
+  // char filename6[] = ".\\result0\\test.hfm";
+
+  // // //测试接收人
+  // char filePath1[] = "yuanxi.txt";
+  // char filePath2[] = "yuanxi.hfm";
+  // char filePath3[] = "code.txt";
+
+  // char filename4[] = "code.txt";
+  // char filename5[] = "yuanxi_j.txt";
+  // char filename6[] = "yuanxi.hfm";
+
+  content = readFileAndWriteSize(filePath1,filePath3);
+  if (content != NULL)
+  {
+    // printf("文件内容如下：\n%s\n", content);
   }
+
+
+  content = readFileAndWriteSize(filePath1, filePath3);
+  // printf("文件内容如下：\n%s\n", content);
+  // printf("文件长度为：\n%d\n", strlen(content));
+
+  // printf("文件内容如下：\n%s\n", content);
+  printf("文件长度为：\n%d\n", strlen(content));
+  root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
+  // bitEncodeAndHash(content);
+  // uint64_t hash_value = fnv1a_64(content, strlen(content) ); 
+  // printf("原字符串 \"%s\" 的哈希值为: 0x%016llx\n", content, hash_value);
+  // printf("原字符串的哈希值为: 0x%016llx\n",  hash_value);
+
+  // 释放动态分配的内存
+
+   // 凯撒解密
+   for (int i = 0; content[i] != '\0'; i++) {
+    content[i] = (unsigned char)(content[i] - 0x55) % 256;
 }
+
+  freeHuffmanTree(root);
+  free(content);   
+
+  printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
+
+
+  decode(filename4, filename6, filename5);
+  // 记录结束时间
+  end = clock();
+
+  // 计算使用的 CPU 时间（秒）
+  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
+  printf("程序运行时间: %f 秒\n", cpu_time_used);
+
+  uint64_t hash1 = calculateFileHash(filePath1);
+  printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
+  uint64_t hash2 = calculateFileHash(filePath2);
+  printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath2, hash2);
+  uint64_t hash3 = calculateFileHash(filename5);
+  printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filename5, hash3);
+  printLastSixteenBytes(filePath2);
+  printFileSizePercentage(filePath2, filePath1);
+  long size1 = getFileSize(filePath1);
+  printf("文件 %s 的 文件大小为: %d\n", filePath1, size1);
+  long size2 = getFileSize(filename6);
+  printf("文件 %s 的 文件大小为: %d\n", filename6, size2);
+  long size3 = getFileSize(filename5);
+  printf("文件 %s 的 文件大小为: %d\n", filename5, size3);
+  return 0;
+}
+
+// int main() {
+//   // clearInputBuffer();
+   
+// while(1){
+//   int filePathChoice;
+//   printf("请输入需要测试的数据文本集序号：");
+//   scanf("%d", &filePathChoice);
+//   while (getchar() != '\n');
+// //   if (scanf("%d", &filePathChoice) != 1) {
+// //     // 清除输入缓冲区中的无效字符
+// //     clearInputBuffer();
+// //     printf("输入无效，请输入一个整数。\n");
+// //     continue;
+// // }
+
+//   if (filePathChoice == 1) {
+//     //测试一
+//     char filePath1[] = ".\\test1\\The_Wretched.txt";
+//     char filePath2[] = ".\\result1\\The_Wretched.hfm";
+//     char filePath3[] = ".\\result1\\code.txt";
+
+//     char filename4[] = ".\\result1\\code.txt";
+//     char filename5[] = ".\\result1\\The_Wretched_j.txt";
+//     char filename6[] = ".\\result1\\The_Wretched.hfm";
+
+//     char recipientId[9];
+//     char recipientName[7];
+//     char senderId[9];
+//     char senderName[7];
+
+//     // printf("请设置发送人的学号：");
+//     // scanf("%9s", senderId);
+//     // while (getchar() != '\n');
+//     // printf("请设置发送人的姓名：");
+//     // scanf("%s", senderName);
+//     // while (getchar() != '\n');
+//     // printf("请设置接收人人的学号：");
+//     // scanf("%9s", recipientId);
+//     // while (getchar() != '\n');
+//     // printf("请设置接收人人的姓名：");
+//     // scanf("%s", recipientName);
+//     // while (getchar() != '\n');
+//     // if(senderId != NULL && senderName != NULL && recipientId != NULL && recipientName != NULL) {
+//     //   insertInfoToFile(filePath1, recipientId, recipientName, senderId, senderName);
+//     // }
+
+//     printf("是否需要对原文本进行偏移量为0x55的凯撒加密（y/n）？：");
+//     char answer;
+//     scanf("%c", &answer);
+//     // scanf("%c", answer);
+
+//     if ( answer == 'y') {
+//       addOffsetToFile(filePath1, 0);
+//     }
+
+
+//     char *content;
+//     HuffmanNode *root;
+//     content = readFileAndWriteSize(filePath1,filePath3);
+//     clock_t start, end;
+//     double cpu_time_used;
+//     // 记录开始时间1
+//     start = clock();
+//     root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
+//     //记录结束时间
+//     end = clock();
+//     // 计算使用的 CPU 时间（秒）
+//     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+//     if ( answer == 'y') {
+//       addOffsetToFile(filePath1, 0);
+//     }
+//     freeHuffmanTree(root);
+//     free(content);
+//     printLastSixteenBytes(filePath2);
+//     printf("程序运行时间: %f 秒\n", cpu_time_used);
+//     uint64_t hash1 = calculateFileHash(filePath1);
+//     printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
+//     uint64_t hash2 = calculateFileHash(filePath2);
+//     printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath2, hash2);
+//     printFileSizePercentage(filePath2, filePath1);
+
+//     printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
+//     break;
+//   }
+// }
 
 
 
 
 
     
-}
+// }
