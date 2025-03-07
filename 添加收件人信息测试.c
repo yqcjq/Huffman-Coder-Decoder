@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <windows.h>
 
 // 插入收件人和发件人信息到文件开头的函数
-void insertInfoToFile(const char *filePath, const char *senderId, const char *senderName, const char *recipientId, const char *recipientName) {
+void insertInfoToFile(char *filePath, char *senderId, char *senderName, char *recipientId, char *recipientName) {
     // 打开原文件以读取内容
     FILE *originalFile = fopen(filePath, "r");
     if (originalFile == NULL) {
@@ -58,14 +59,31 @@ void insertInfoToFile(const char *filePath, const char *senderId, const char *se
 }
 
 int main() {
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
     // const char *filePath = "yuanxi.txt";
-    const char *filePath = "The_Wretched.txt";
-    const char *recipientId = "123451234";
-    const char *recipientName = "张三";
-    const char *senderId = "543215432";
-    const char *senderName = "李四";
+    char *filePath = "The_Wretched.txt";
+    char recipientId[10] = "123451234";
+    char recipientName[100];
+    char senderId[10] = "543215432";
+    char senderName[100];
 
-    insertInfoToFile(filePath,  senderId, senderName, recipientId, recipientName);
+
+    printf("请设置发送人的姓名：");
+    if (fgets(senderName, sizeof(senderName), stdin) != NULL) {
+        // 去除换行符
+        senderName[strcspn(senderName, "\n")] = '\0';
+    }
+    printf("发送人的姓名是%s\n", senderName);
+
+    printf("请设置收件的姓名：");
+    if (fgets(recipientName, sizeof(recipientName), stdin) != NULL) {
+        // 去除换行符
+        recipientName[strcspn(recipientName, "\n")] = '\0';
+    }
+
+    insertInfoToFile(filePath, senderId, senderName, recipientId, recipientName);
+    printf("发送人姓名的长度是%d\n", (int)strlen(senderName));
 
     return 0;
 }

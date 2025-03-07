@@ -237,11 +237,11 @@ int addOffsetToFile(const char *filename, int m) {
   if(m == 1) {
       // 对每个字节加上0x55
       for (long i = 0; i < fileSize; i++) {
-          buffer[i] = (buffer[i] + 0x55) % 256;
+          buffer[i] = (buffer[i] + 0x55);
       }
-  }else {
+  }else if (m == 0){
       for (long i = 0; i < fileSize; i++) {
-          buffer[i] = (buffer[i] - 0x55) % 256;
+          buffer[i] = (buffer[i] - 0x55);
       }
   }
 
@@ -603,25 +603,17 @@ HuffmanNode *buildHuffmanTree(CharFreq arr[], int n)
     // printf("进入循环时n的值为：%d\n", n);
     min1 = nodes[0];
     // printf("此时min1的值为：%c,%d\n", nodes[0]->ch, nodes[0]->freq);
-    
     nodes[0] = nodes[n - 1];
     n--;
-
     for (int i = n / 2 - 1; i >= 0; i--) {
         minHeapify1(nodes, n, i);
     }
-
     min2 = nodes[0];
     // printf("此时min2的值为：%c,%d\n", nodes[0]->ch, nodes[0]->freq);
     nodes[0] = nodes[n - 1];
     n--;
     
-    
-
-
     // 取两个孩子节点中的最大字节值
-
-
     unsigned char maxCh = ((unsigned char)min1->ch > (unsigned char)min2->ch) ? (unsigned char)min1->ch : (unsigned char)min2->ch;
 
     // 创建新节点，合并两个最小频率节点
@@ -860,7 +852,7 @@ void encodeText(const char *filename, char huffmanCodes[256][100], char *content
       }
     }
   }
-  printf("\n");
+  // printf("\n");
 
   // printf("已经压缩成二进制文本了\n ");
   // printf("补零前%s\n ",binary);
@@ -1151,6 +1143,8 @@ void decode(char *filename, char *encodedFilename,  char *filename2) {
     }
     fclose(file);
     printf("成功建树\n");
+    // int wpl1 = calculateWPL(root, 0);
+    // printf("哈夫曼树的带权路径长度 (WPL) 为: %d\n", wpl1);
 
     // // 将十六进制文件内容转换为二进制字符串
     // char encodedBinary[100000];
@@ -1476,6 +1470,176 @@ void decode(char *filename, char *encodedFilename,  char *filename2) {
 }
 
 
+
+
+
+// 验证接收人信息的函数
+int verifyRecipientInfo(char *codeTablePath, char *encodedFilePath, char *decodedPath, const char *recipientId, const char *recipientName, const char *senderId, const char *senderName) {
+  FILE *file = fopen(codeTablePath, "rb");
+  if (file == NULL) {
+      perror("无法打开编码表文件");
+      return 0;
+  }
+
+  // 读取解码后文本的总字节数
+  int totalBytes;
+  fscanf(file, "%d\n", &totalBytes);
+
+  // 构建哈夫曼树的根节点
+  HuffmanNode *root = decodenewNode();
+
+  // 读取编码表
+  char line[100];
+  int k = 0;
+  while (fgets(line, sizeof(line), file) != NULL) {
+      deleteSpace(line);
+      // printf("读取到的行: %s\n", line);
+      char ch[3];
+      int bitCount;
+      char hexCode[30];
+      ch[0] = line[2];
+      ch[1] = line[3];
+      ch[2] = '\0';
+      bitCount = hexCharToInt(line[6]) * 16 + hexCharToInt(line[7]);
+      int count, i;
+      for (count = 0, i = 0; count < ((bitCount - 1) / 8 + 1); count++) {
+          hexCode[i] = line[i + 10 + 2 * count];
+          i++;
+          hexCode[i] = line[i + 10 + 2 * count];
+          i++;
+      }
+      hexCode[i] = '\0';
+      char binaryCode[100];
+      hexToBinary(hexCode, binaryCode, bitCount);
+      // printf("字符: 0x%s, 编码: %s\n", ch, binaryCode);
+      decodebuildHuffmanTree(root, binaryCode, (char)strtol(ch, NULL, 16));
+  }
+  fclose(file);
+
+  printf("成功建立第二个编码表\n");
+
+  FILE *encodedFile = fopen(encodedFilePath, "rb");
+  if (encodedFile == NULL) {
+      perror("无法打开编码文件");
+      return 0;
+  }
+
+  unsigned char byteData[BUFFER_SIZE];
+  char binary[BUFFER_SIZE * 8 + 1];
+  char remainingBinary[BUFFER_SIZE * 9 + 1] = "";
+  int remainingLen = 0;
+  int decodedBytes = 0;
+  size_t bytesRead;
+  char decodedInfo[256] = "";
+  printf("准备进入while循环\n");
+  while ((bytesRead = fread(byteData, 1, BUFFER_SIZE, encodedFile)) > 0 && decodedBytes < 50) {
+      hexToBit(byteData, binary, bytesRead);
+      // printf("十六进制数据: ");
+      // for (int i = 0; i < bytesRead; i++) {
+      //     printf("%02x ", byteData[i]);
+      // }
+      // printf("\n二进制数据: %s\n", binary);
+      strcat(remainingBinary, binary);
+      // printf("111111\n");
+      HuffmanNode *current = root;
+      for (int i = 0; remainingBinary[i] != '\0' && decodedBytes < 2560; i++) {
+          // printf("进入for循环\n");
+          if (remainingBinary[i] == '0') {
+              current = current->left;
+              // printf("2222\n");
+          } else {
+              current = current->right;
+              // printf("3333\n");
+          }
+          // printf("444\n");
+          if (current->left == NULL && current->right == NULL) {
+              // printf("555\n");
+              // printf("decodedInfo的第%d位是%c\n", decodedBytes, current->ch);
+              decodedInfo[decodedBytes++] = current->ch;
+              current = root;
+              if (decodedBytes >= 50 ) {
+              break;
+              }
+          }
+          // printf("66666\n");
+      }
+      // printf("出for循环\n");
+      // remainingLen = strlen(remainingBinary);
+      // for (int i = 0; i < remainingLen; i++) {
+      //     if (remainingBinary[i] != '\0') {
+      //        remainingBinary[i] = remainingBinary[i + decodedBytes];
+      //     }
+      // }
+      // remainingBinary[remainingLen - decodedBytes] = '\0';
+
+      // // 处理跨块未完成的编码
+      // remainingLen = strlen(remainingBinary) - lastValidPos;
+      // strcpy(remainingBinary, remainingBinary + lastValidPos);
+  }
+  fclose(encodedFile);
+  decodedInfo[decodedBytes] = '\0';
+  // printf("出while循环\n");
+  // printf("decodedInfo是%s\n", decodedInfo);
+  // 解析前两行信息
+  char *firstLine = strtok(decodedInfo, "\n");
+  char *secondLine = strtok(NULL, "\n");
+
+  printf("解析出来第一行是%s", firstLine);
+  printf("解析出来第二行是%s", secondLine);
+
+  if (firstLine == NULL || secondLine == NULL) {
+      printf("解码的前两行信息不完整\n");
+      return 0;
+  }
+
+  char id1[20], name1[10], id2[20], name2[10];
+  sscanf(firstLine, "U%9s，%6s", id1, name1);
+  sscanf(secondLine, "U%9s，%6s", id2, name2);
+
+  printf("解析出来第一行id是%s,姓名是%s\n", id1,name1);
+  printf("解析出来第一行id是%s,姓名是%s\n", id2,name2);
+  if ((strcmp(id1, senderId) != 0 || strcmp(name1, senderName) != 0) ||
+  (strcmp(id2, recipientId) != 0 || strcmp(name2, recipientName) != 0)) {
+      printf("收件人或发件人信息不匹配\n");
+      return 0;
+  }
+
+  // 调用 decode 函数解码全部
+  decode(codeTablePath, encodedFilePath, decodedPath);
+
+  // 删去前两行
+  FILE *decodedFile = fopen(decodedPath, "r");
+  if (decodedFile == NULL) {
+      perror("无法打开解码后的文件");
+      return 0;
+  }
+  FILE *tempFile = fopen("temp.txt", "w");
+  if (tempFile == NULL) {
+      perror("无法创建临时文件");
+      fclose(decodedFile);
+      return 0;
+  }
+  int lineCount = 0;
+  char c;
+  while ((c = fgetc(decodedFile)) != EOF) {
+      if (lineCount >= 2) {
+       fputc(c, tempFile);
+      }
+      if (c == '\n') {
+        lineCount++;
+      }
+  }
+  fclose(decodedFile);
+  fclose(tempFile);
+
+  remove(decodedPath);
+  rename("temp.txt", decodedPath);
+
+  return 1;
+}
+
+
+
 int main()
 {
   clock_t start, end;
@@ -1487,14 +1651,14 @@ int main()
   char *content;
   HuffmanNode *root;
 
-  // //测试一
-  // char filePath1[] = ".\\test1\\The_Wretched.txt";
-  // char filePath2[] = ".\\result1\\The_Wretched.hfm";
-  // char filePath3[] = ".\\result1\\code.txt";
+  //测试一
+  char filePath1[] = ".\\test1\\The_Wretched.txt";
+  char filePath2[] = ".\\result1\\The_Wretched.hfm";
+  char filePath3[] = ".\\result1\\code.txt";
 
-  // char filename4[] = ".\\result1\\code.txt";
-  // char filename5[] = ".\\result1\\The_Wretched_j.txt";
-  // char filename6[] = ".\\result1\\The_Wretched.hfm";
+  char filename4[] = ".\\result1\\code.txt";
+  char filename5[] = ".\\result1\\The_Wretched_j.txt";
+  char filename6[] = ".\\result1\\The_Wretched.hfm";
 
   // // 测试二
   // char filePath1[] = ".\\test2\\yuanxi.txt";
@@ -1514,14 +1678,14 @@ int main()
   // char filename5[] = ".\\result3\\middle_j.txt";
   // char filename6[] = ".\\result3\\middle.hfm";
 
-  //测试四
-  char filePath1[] = ".\\test4\\test.txt";
-  char filePath2[] = ".\\result4\\test.hfm";
-  char filePath3[] = ".\\result4\\code.txt";
+  // //测试四
+  // char filePath1[] = ".\\test4\\test.txt";
+  // char filePath2[] = ".\\result4\\test.hfm";
+  // char filePath3[] = ".\\result4\\code.txt";
 
-  char filename4[] = ".\\result4\\code.txt";
-  char filename5[] = ".\\result4\\test_j.txt";
-  char filename6[] = ".\\result4\\test.hfm";
+  // char filename4[] = ".\\result4\\code.txt";
+  // char filename5[] = ".\\result4\\test_j.txt";
+  // char filename6[] = ".\\result4\\test.hfm";
 
 
   // //样本文本
@@ -1600,6 +1764,11 @@ int main()
   return 0;
 }
 
+
+
+
+
+
 // int main() {
 //   // clearInputBuffer();
    
@@ -1625,26 +1794,26 @@ int main()
 //     char filename5[] = ".\\result1\\The_Wretched_j.txt";
 //     char filename6[] = ".\\result1\\The_Wretched.hfm";
 
-//     char recipientId[9];
+//     char recipientId[10];
 //     char recipientName[7];
-//     char senderId[9];
+//     char senderId[10];
 //     char senderName[7];
 
-//     // printf("请设置发送人的学号：");
-//     // scanf("%9s", senderId);
-//     // while (getchar() != '\n');
-//     // printf("请设置发送人的姓名：");
-//     // scanf("%s", senderName);
-//     // while (getchar() != '\n');
-//     // printf("请设置接收人人的学号：");
-//     // scanf("%9s", recipientId);
-//     // while (getchar() != '\n');
-//     // printf("请设置接收人人的姓名：");
-//     // scanf("%s", recipientName);
-//     // while (getchar() != '\n');
-//     // if(senderId != NULL && senderName != NULL && recipientId != NULL && recipientName != NULL) {
-//     //   insertInfoToFile(filePath1, recipientId, recipientName, senderId, senderName);
-//     // }
+//     printf("请设置发送人的学号：");
+//     scanf("%9s", senderId);
+//     while (getchar() != '\n');
+//     printf("请设置发送人的姓名：");
+//     scanf("%s", senderName);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的学号：");
+//     scanf("%9s", recipientId);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的姓名：");
+//     scanf("%s", recipientName);
+//     while (getchar() != '\n');
+//     if(senderId != NULL && senderName != NULL && recipientId != NULL && recipientName != NULL) {
+//       insertInfoToFile(filePath1, recipientId, recipientName, senderId, senderName);
+//     }
 
 //     printf("是否需要对原文本进行偏移量为0x55的凯撒加密（y/n）？：");
 //     char answer;
@@ -1652,7 +1821,7 @@ int main()
 //     // scanf("%c", answer);
 
 //     if ( answer == 'y') {
-//       addOffsetToFile(filePath1, 0);
+//       addOffsetToFile(filePath1, 1);
 //     }
 
 
@@ -1674,7 +1843,7 @@ int main()
 //     freeHuffmanTree(root);
 //     free(content);
 //     printLastSixteenBytes(filePath2);
-//     printf("程序运行时间: %f 秒\n", cpu_time_used);
+//     printf("加密花费的时间为: %f 秒\n", cpu_time_used);
 //     uint64_t hash1 = calculateFileHash(filePath1);
 //     printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
 //     uint64_t hash2 = calculateFileHash(filePath2);
@@ -1682,13 +1851,137 @@ int main()
 //     printFileSizePercentage(filePath2, filePath1);
 
 //     printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
+
+
+//     printf("请设置发送人的学号：");
+//     scanf("%9s", senderId);
+//     while (getchar() != '\n');
+//     printf("请设置发送人的姓名：");
+//     scanf("%s", senderName);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的学号：");
+//     scanf("%9s", recipientId);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的姓名：");
+//     scanf("%s", recipientName);
+//     while (getchar() != '\n');
+
+//     clock_t start2, end2;
+//     double cpu_time_used2;
+//     // 记录开始时间1
+//     start2 = clock();
+//     verifyRecipientInfo(filePath3, filePath2, filename5, recipientId, recipientName, senderId, senderName);
+//     end2 = clock();
+//     // 计算使用的 CPU 时间（秒）
+//     cpu_time_used2 = ((double) (end - start)) / CLOCKS_PER_SEC;
+//     if ( answer == 'y') {
+//       addOffsetToFile(filename5, 1);
+//     }
+
+//     printf("解密花费的时间为: %f 秒\n", cpu_time_used2);
 //     break;
 //   }
+//   else if (filePathChoice == 2) {
+
+//      // 测试二
+//     char filePath1[] = ".\\test2\\yuanxi.txt";
+//     char filePath2[] = ".\\result2\\yuanxi.hfm";
+//     char filePath3[] = ".\\result2\\code.txt";
+
+//     char filename4[] = ".\\result2\\code.txt";
+//     char filename5[] = ".\\result2\\yuanxi_j.txt";
+//     char filename6[] = ".\\result2\\yuanxi.hfm";
+
+//     char recipientId[10];
+//     char recipientName[7];
+//     char senderId[10];
+//     char senderName[7];
+
+//     printf("请设置发送人的学号：");
+//     scanf("%9s", senderId);
+//     while (getchar() != '\n');
+//     printf("请设置发送人的姓名：");
+//     scanf("%s", senderName);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的学号：");
+//     scanf("%9s", recipientId);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的姓名：");
+//     scanf("%s", recipientName);
+//     while (getchar() != '\n');
+//     if(senderId != NULL && senderName != NULL && recipientId != NULL && recipientName != NULL) {
+//       insertInfoToFile(filePath1, recipientId, recipientName, senderId, senderName);
+//     }
+
+//     printf("是否需要对原文本进行偏移量为0x55的凯撒加密（y/n）？：");
+//     char answer;
+//     scanf("%c", &answer);
+//     // scanf("%c", answer);
+
+//     if ( answer == 'y') {
+//       addOffsetToFile(filePath1, 1);
+//     }
+
+
+//     char *content;
+//     HuffmanNode *root;
+//     content = readFileAndWriteSize(filePath1,filePath3);
+//     clock_t start, end;
+//     double cpu_time_used;
+//     // 记录开始时间1
+//     start = clock();
+//     root = sortSingleByteCharsByFrequency(filePath1, content, filePath2, filePath3);
+//     //记录结束时间
+//     end = clock();
+//     // 计算使用的 CPU 时间（秒）
+//     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+//     if ( answer == 'y') {
+//       addOffsetToFile(filePath1, 0);
+//     }
+//     freeHuffmanTree(root);
+//     free(content);
+//     printLastSixteenBytes(filePath2);
+//     printf("加密花费的时间为: %f 秒\n", cpu_time_used);
+//     uint64_t hash1 = calculateFileHash(filePath1);
+//     printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath1, hash1);
+//     uint64_t hash2 = calculateFileHash(filePath2);
+//     printf("文件 %s 的 FNV-1a 64 位哈希值为: 0x%016llx\n", filePath2, hash2);
+//     printFileSizePercentage(filePath2, filePath1);
+
+//     printf("\n\n\n-------------------接下来是解码相关的数据--------------------\n\n\n");
+
+
+//     printf("请设置发送人的学号：");
+//     scanf("%9s", senderId);
+//     while (getchar() != '\n');
+//     printf("请设置发送人的姓名：");
+//     scanf("%s", senderName);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的学号：");
+//     scanf("%9s", recipientId);
+//     while (getchar() != '\n');
+//     printf("请设置接收人人的姓名：");
+//     scanf("%s", recipientName);
+//     while (getchar() != '\n');
+
+//     clock_t start2, end2;
+//     double cpu_time_used2;
+//     // 记录开始时间1
+//     start2 = clock();
+//     verifyRecipientInfo(filePath3, filePath2, filename5, recipientId, recipientName, senderId, senderName);
+//     end2 = clock();
+//     // 计算使用的 CPU 时间（秒）
+//     cpu_time_used2 = ((double) (end - start)) / CLOCKS_PER_SEC;
+//     if ( answer == 'y') {
+//       addOffsetToFile(filename5, 1);
+//     }
+
+//     printf("解密花费的时间为: %f 秒\n", cpu_time_used2);
+//     break;
+//   }
+
+
 // }
 
 
-
-
-
-    
 // }
